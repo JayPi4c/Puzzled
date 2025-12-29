@@ -37,13 +37,13 @@ const DEFAULT_TILES: &'static [&'static [&'static [bool]]] = &[
 ];
 
 const DEFAULT_BOARD_LAYOUT: [[bool; 7]; 7] = [
-    [false, false, false, false, false, false, true],
-    [false, false, false, false, false, false, true],
-    [false, false, false, false, false, false, false],
-    [false, false, false, false, false, false, false],
-    [false, false, false, false, false, false, false],
-    [false, false, false, false, false, false, false],
-    [false, false, false, true, true, true, true],
+    [true, true, true, true, true, true, false],
+    [true, true, true, true, true, true, false],
+    [true, true, true, true, true, true, true],
+    [true, true, true, true, true, true, true],
+    [true, true, true, true, true, true, true],
+    [true, true, true, true, true, true, true],
+    [true, true, true, false, false, false, false],
 ];
 
 const DEFAULT_BOARD_MEANING_AREAS: [[i32; 7]; 7] = [
@@ -105,25 +105,25 @@ const YEAR_TILES: &'static [&'static [&'static [bool]]] = &[
 
 const YEAR_BOARD_LAYOUT: [[bool; 11]; 7] = [
     [
-        true, true, false, false, false, false, false, false, true, true, true,
+        false, false, true, true, true, true, true, true, false, false, false,
     ],
     [
-        false, false, false, false, false, false, false, false, true, false, false,
+        true, true, true, true, true, true, true, true, false, true, true,
     ],
     [
-        false, false, false, false, false, false, false, false, false, false, false,
+        true, true, true, true, true, true, true, true, true, true, true,
     ],
     [
-        false, false, false, false, false, false, false, false, false, false, false,
+        true, true, true, true, true, true, true, true, true, true, true,
     ],
     [
-        false, false, false, false, false, false, false, false, false, false, false,
+        true, true, true, true, true, true, true, true, true, true, true,
     ],
     [
-        false, false, false, false, false, false, false, false, false, false, false,
+        true, true, true, true, true, true, true, true, true, true, true,
     ],
     [
-        true, true, false, false, false, true, true, true, true, true, true,
+        false, false, true, true, true, false, false, false, false, false, false,
     ],
 ];
 

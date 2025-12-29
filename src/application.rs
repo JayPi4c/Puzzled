@@ -25,7 +25,9 @@ use gtk::{gio, glib, Fixed, GestureDrag, PropagationPhase, Widget};
 
 use crate::config::VERSION;
 use crate::puzzle::tile::Tile;
+use crate::puzzle::PuzzleConfig;
 use crate::state::get_state;
+use crate::view::TileView;
 use crate::{puzzle, PuzzleadayWindow};
 
 pub const GRID_SIZE: i32 = 32;
@@ -156,6 +158,8 @@ impl PuzzleadayApplication {
             .for_each(|widget: &Widget| grid.remove(widget));
         widgets_in_grid.clear();
 
+        self.setup_board(&grid, &get_state().puzzle_config, &mut widgets_in_grid);
+
         let puzzle_config = &get_state().puzzle_config;
         for tile in &puzzle_config.tiles {
             self.setup_tile(&grid, tile, &mut widgets_in_grid);
@@ -176,7 +180,7 @@ impl PuzzleadayApplication {
     }
 
     fn setup_tile(&self, grid: &Fixed, tile: &Tile, widgets_in_grid: &mut Vec<Widget>) {
-        let tile_view = crate::view::TileView::new(tile.base.clone());
+        let tile_view = TileView::new(tile.base.clone());
         let widget = tile_view.parent.upcast::<Widget>();
         grid.put(&widget, 0.0, 0.0);
         self.setup_drag_and_drop(&widget, grid);
@@ -206,5 +210,21 @@ impl PuzzleadayApplication {
         });
 
         widget.add_controller(drag);
+    }
+
+    fn setup_board(
+        &self,
+        grid: &Fixed,
+        puzzle_config: &PuzzleConfig,
+        widgets_in_grid: &mut Vec<Widget>,
+    ) {
+        let board_view = crate::view::BoardView::new(
+            puzzle_config.board_layout.clone(),
+            puzzle_config.meaning_areas.clone(),
+            puzzle_config.meaning_values.clone(),
+        );
+        let widget = board_view.parent.upcast::<Widget>();
+        grid.put(&widget, 0.0, 0.0);
+        widgets_in_grid.push(widget);
     }
 }
