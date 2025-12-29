@@ -1,0 +1,40 @@
+.tile-cell {
+    border-style: none;
+    border-radius: 0;
+}
+
+.tile-cell-1 {
+    background-color: #c16e1e;
+}
+
+.tile-cell-2 {
+    background-color: #10ec1a;
+}
+
+.tile-cell-3 {
+    background-color: #14d8d1;
+}
+
+.tile-cell-4 {
+    background-color: #1d42b5;
+}
+
+.tile-cell-5 {
+    background-color: #9523c1;
+}
+
+.tile-cell-6 {
+    background-color: #e40000;
+}
+
+.tile-cell-7 {
+    background-color: #fff52e;
+}
+
+.tile-cell-8 {
+    background-color: #215726;
+}
+
+.tile-cell-9 {
+    background-color: #5e2121;
+}

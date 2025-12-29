@@ -8,7 +8,7 @@ pub struct TileView {
 }
 
 impl TileView {
-    pub fn new(base: Array2<bool>) -> Self {
+    pub fn new(id: i32, base: Array2<bool>) -> Self {
         let grid = Grid::new();
         grid.set_row_homogeneous(true);
         grid.set_column_homogeneous(true);
@@ -18,7 +18,9 @@ impl TileView {
         for r in 0..rows {
             for c in 0..cols {
                 if base[[r, c]] {
-                    let cell = gtk::Frame::new(None);
+                    let cell = gtk::Frame::builder()
+                        .css_classes(vec!["tile-cell", format!("tile-cell-{}", id).as_str()])
+                        .build();
                     cell.set_width_request(GRID_SIZE);
                     cell.set_height_request(GRID_SIZE);
 

@@ -17,18 +17,20 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-use adw::prelude::*;
-use adw::subclass::prelude::*;
-use gettextrs::gettext;
-use gtk::prelude::*;
-use gtk::{gio, glib, Fixed, GestureDrag, PropagationPhase, Widget};
-
 use crate::config::VERSION;
 use crate::puzzle::tile::Tile;
 use crate::puzzle::PuzzleConfig;
 use crate::state::get_state;
 use crate::view::TileView;
 use crate::{puzzle, PuzzleadayWindow};
+use adw::gdk::Display;
+use adw::prelude::*;
+use adw::subclass::prelude::*;
+use gettextrs::gettext;
+use gtk::{
+    gio, glib, CssProvider, Fixed, GestureDrag, PropagationPhase, Widget,
+    STYLE_PROVIDER_PRIORITY_APPLICATION,
+};
 
 pub const GRID_SIZE: i32 = 32;
 
@@ -70,6 +72,7 @@ mod imp {
                 window.upcast()
             });
 
+            application.load_css();
             application.setup(
                 &window
                     .downcast_ref::<PuzzleadayWindow>()
@@ -123,6 +126,21 @@ impl PuzzleadayApplication {
             .build();
 
         about.present(Some(&window));
+    }
+
+    fn load_css(&self) {
+        let provider = CssProvider::new();
+        provider.load_from_resource("/de/til7701/PuzzleADay/style.css");
+
+        if let Some(display) = Display::default() {
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
+        } else {
+            eprintln!("No default adw::Display available to add CSS provider");
+        }
     }
 
     fn setup(&self, window: &PuzzleadayWindow) {
@@ -180,7 +198,7 @@ impl PuzzleadayApplication {
     }
 
     fn setup_tile(&self, grid: &Fixed, tile: &Tile, widgets_in_grid: &mut Vec<Widget>) {
-        let tile_view = TileView::new(tile.base.clone());
+        let tile_view = TileView::new(tile.id, tile.base.clone());
         let widget = tile_view.parent.upcast::<Widget>();
         grid.put(&widget, 0.0, 0.0);
         self.setup_drag_and_drop(&widget, grid);
