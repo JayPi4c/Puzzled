@@ -22,6 +22,7 @@ mod application;
 mod config;
 mod puzzle;
 mod state;
+mod view;
 mod window;
 
 use self::application::PuzzleadayApplication;

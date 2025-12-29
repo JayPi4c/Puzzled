@@ -1,6 +1,6 @@
 mod bitmask;
 mod config;
-mod tile;
+pub mod tile;
 mod util;
 
 pub(crate) use crate::puzzle::config::PuzzleConfig;

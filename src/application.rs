@@ -21,11 +21,14 @@ use adw::prelude::*;
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
 use gtk::prelude::*;
-use gtk::{gio, glib, GestureDrag, PropagationPhase, Widget};
+use gtk::{gio, glib, Fixed, GestureDrag, PropagationPhase, Widget};
 
 use crate::config::VERSION;
+use crate::puzzle::tile::Tile;
 use crate::state::get_state;
 use crate::{puzzle, PuzzleadayWindow};
+
+pub const GRID_SIZE: i32 = 32;
 
 mod imp {
     use super::*;
@@ -153,33 +156,10 @@ impl PuzzleadayApplication {
             .for_each(|widget: &Widget| grid.remove(widget));
         widgets_in_grid.clear();
 
-        const GRID_SIZE: i32 = 32;
-        let item = gtk::Button::with_label("Drag me");
-        grid.put(&item, 0.0, 0.0);
-        widgets_in_grid.push(item.clone().upcast());
-
-        let drag = GestureDrag::new();
-        drag.set_propagation_phase(PropagationPhase::Capture);
-
-        let fixed_clone1 = grid.clone();
-        let item_clone1 = item.clone();
-        drag.connect_drag_update(move |_, dx, dy| {
-            let (x, y) = fixed_clone1.child_position(&item_clone1);
-            let new_x = x + dx;
-            let new_y = y + dy;
-            fixed_clone1.move_(&item_clone1, new_x, new_y);
-        });
-
-        let grid_clone2 = grid.clone();
-        let item_clone2 = item.clone();
-        drag.connect_drag_end(move |_, _, _| {
-            let (x, y) = grid_clone2.child_position(&item_clone2);
-            let snapped_x = (x as i32 / GRID_SIZE) * GRID_SIZE;
-            let snapped_y = (y as i32 / GRID_SIZE) * GRID_SIZE;
-            grid_clone2.move_(&item_clone2, snapped_x as f64, snapped_y as f64);
-        });
-
-        item.add_controller(drag);
+        let puzzle_config = &get_state().puzzle_config;
+        for tile in &puzzle_config.tiles {
+            self.setup_tile(&grid, tile, &mut widgets_in_grid);
+        }
 
         drawing.set_draw_func(move |_, cr, width, height| {
             cr.set_source_rgba(1.0, 1.0, 1.0, 0.1);
@@ -193,5 +173,38 @@ impl PuzzleadayApplication {
             }
             cr.stroke().unwrap();
         });
+    }
+
+    fn setup_tile(&self, grid: &Fixed, tile: &Tile, widgets_in_grid: &mut Vec<Widget>) {
+        let tile_view = crate::view::TileView::new(tile.base.clone());
+        let widget = tile_view.parent.upcast::<Widget>();
+        grid.put(&widget, 0.0, 0.0);
+        self.setup_drag_and_drop(&widget, grid);
+        widgets_in_grid.push(widget);
+    }
+
+    fn setup_drag_and_drop(&self, widget: &Widget, grid: &Fixed) {
+        let drag = GestureDrag::new();
+        drag.set_propagation_phase(PropagationPhase::Capture);
+
+        let fixed_clone1 = grid.clone();
+        let item_clone1 = widget.clone();
+        drag.connect_drag_update(move |_, dx, dy| {
+            let (x, y) = fixed_clone1.child_position(&item_clone1);
+            let new_x = x + dx;
+            let new_y = y + dy;
+            fixed_clone1.move_(&item_clone1, new_x, new_y);
+        });
+
+        let grid_clone2 = grid.clone();
+        let item_clone2 = widget.clone();
+        drag.connect_drag_end(move |_, _, _| {
+            let (x, y) = grid_clone2.child_position(&item_clone2);
+            let snapped_x = (x / GRID_SIZE as f64).round() * GRID_SIZE as f64;
+            let snapped_y = (y / GRID_SIZE as f64).round() * GRID_SIZE as f64;
+            grid_clone2.move_(&item_clone2, snapped_x, snapped_y);
+        });
+
+        widget.add_controller(drag);
     }
 }
