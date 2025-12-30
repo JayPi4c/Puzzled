@@ -26,8 +26,8 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/de/til7701/PuzzleADay/window.ui")]
-    pub struct PuzzleadayWindow {
+    #[template(resource = "/de/til7701/PuzzleMoreDays/window.ui")]
+    pub struct PuzzlemoredaysWindow {
         #[template_child]
         pub grid: TemplateChild<gtk::Fixed>,
         #[template_child]
@@ -37,9 +37,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for PuzzleadayWindow {
-        const NAME: &'static str = "PuzzleadayWindow";
-        type Type = super::PuzzleadayWindow;
+    impl ObjectSubclass for PuzzlemoredaysWindow {
+        const NAME: &'static str = "PuzzlemoredaysWindow";
+        type Type = super::PuzzlemoredaysWindow;
         type ParentType = adw::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
@@ -51,19 +51,19 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for PuzzleadayWindow {}
-    impl WidgetImpl for PuzzleadayWindow {}
-    impl WindowImpl for PuzzleadayWindow {}
-    impl ApplicationWindowImpl for PuzzleadayWindow {}
-    impl AdwApplicationWindowImpl for PuzzleadayWindow {}
+    impl ObjectImpl for PuzzlemoredaysWindow {}
+    impl WidgetImpl for PuzzlemoredaysWindow {}
+    impl WindowImpl for PuzzlemoredaysWindow {}
+    impl ApplicationWindowImpl for PuzzlemoredaysWindow {}
+    impl AdwApplicationWindowImpl for PuzzlemoredaysWindow {}
 }
 
 glib::wrapper! {
-    pub struct PuzzleadayWindow(ObjectSubclass<imp::PuzzleadayWindow>)
+    pub struct PuzzlemoredaysWindow(ObjectSubclass<imp::PuzzlemoredaysWindow>)
         @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,        @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl PuzzleadayWindow {
+impl PuzzlemoredaysWindow {
     pub fn new<P: IsA<gtk::Application>>(application: &P) -> Self {
         glib::Object::builder()
             .property("application", application)

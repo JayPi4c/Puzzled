@@ -690,7 +690,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "puzzleaday"
+name = "puzzlemoredays"
 version = "0.1.0"
 dependencies = [
  "gettext-rs",

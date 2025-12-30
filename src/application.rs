@@ -18,11 +18,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 use crate::config::VERSION;
+use crate::puzzle;
 use crate::puzzle::tile::Tile;
 use crate::puzzle::PuzzleConfig;
 use crate::state::get_state;
 use crate::view::TileView;
-use crate::{puzzle, PuzzleadayWindow};
+use crate::window::PuzzlemoredaysWindow;
 use adw::gdk::Display;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
@@ -37,21 +38,22 @@ pub const GRID_SIZE: i32 = 32;
 
 mod imp {
     use super::*;
+    use crate::window::PuzzlemoredaysWindow;
     use std::cell::RefCell;
 
     #[derive(Debug, Default)]
-    pub struct PuzzleadayApplication {
+    pub struct PuzzlemoredaysApplication {
         pub widgets_in_grid: RefCell<Vec<Widget>>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for PuzzleadayApplication {
-        const NAME: &'static str = "PuzzleadayApplication";
-        type Type = super::PuzzleadayApplication;
+    impl ObjectSubclass for PuzzlemoredaysApplication {
+        const NAME: &'static str = "PuzzlemoredaysApplication";
+        type Type = super::PuzzlemoredaysApplication;
         type ParentType = adw::Application;
     }
 
-    impl ObjectImpl for PuzzleadayApplication {
+    impl ObjectImpl for PuzzlemoredaysApplication {
         fn constructed(&self) {
             self.parent_constructed();
             let obj = self.obj();
@@ -60,7 +62,7 @@ mod imp {
         }
     }
 
-    impl ApplicationImpl for PuzzleadayApplication {
+    impl ApplicationImpl for PuzzlemoredaysApplication {
         // We connect to the activate callback to create a window when the application
         // has been launched. Additionally, this callback notifies us when the user
         // tries to launch a "second instance" of the application. When they try
@@ -69,37 +71,37 @@ mod imp {
             let application = self.obj();
             // Get the current window or create one if necessary
             let window = application.active_window().unwrap_or_else(|| {
-                let window = PuzzleadayWindow::new(&*application);
+                let window = PuzzlemoredaysWindow::new(&*application);
                 window.upcast()
             });
 
             application.load_css();
             application.setup(
                 &window
-                    .downcast_ref::<PuzzleadayWindow>()
-                    .expect("active window is not a PuzzleadayWindow"),
+                    .downcast_ref::<PuzzlemoredaysWindow>()
+                    .expect("active window is not a PuzzlemoredaysWindow"),
             );
 
             window.present();
         }
     }
 
-    impl GtkApplicationImpl for PuzzleadayApplication {}
-    impl AdwApplicationImpl for PuzzleadayApplication {}
+    impl GtkApplicationImpl for PuzzlemoredaysApplication {}
+    impl AdwApplicationImpl for PuzzlemoredaysApplication {}
 }
 
 glib::wrapper! {
-    pub struct PuzzleadayApplication(ObjectSubclass<imp::PuzzleadayApplication>)
+    pub struct PuzzlemoredaysApplication(ObjectSubclass<imp::PuzzlemoredaysApplication>)
         @extends gio::Application, gtk::Application, adw::Application,
         @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl PuzzleadayApplication {
+impl PuzzlemoredaysApplication {
     pub fn new(application_id: &str, flags: &gio::ApplicationFlags) -> Self {
         glib::Object::builder()
             .property("application-id", application_id)
             .property("flags", flags)
-            .property("resource-base-path", "/de/til7701/PuzzleADay")
+            .property("resource-base-path", "/de/til7701/PuzzleMoreDays")
             .build()
     }
 
@@ -116,14 +118,14 @@ impl PuzzleadayApplication {
     fn show_about(&self) {
         let window = self.active_window().unwrap();
         let about = adw::AboutDialog::builder()
-            .application_name("puzzleaday")
-            .application_icon("de.til7701.PuzzleADay")
-            .developer_name("Tilman")
+            .application_name("Puzzle More Days")
+            .application_icon("de.til7701.PuzzleMoreDays")
+            .developer_name("Tilman Holube")
             .version(VERSION)
-            .developers(vec!["Tilman"])
+            .developers(vec!["Tilman Holube"])
             // Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
             .translator_credits(&gettext("translator-credits"))
-            .copyright("© 2025 Tilman")
+            .copyright("© 2025 Tilman Holube")
             .build();
 
         about.present(Some(&window));
@@ -131,7 +133,7 @@ impl PuzzleadayApplication {
 
     fn load_css(&self) {
         let provider = CssProvider::new();
-        provider.load_from_resource("/de/til7701/PuzzleADay/style.css");
+        provider.load_from_resource("/de/til7701/PuzzleMoreDays/style.css");
 
         if let Some(display) = Display::default() {
             gtk::style_context_add_provider_for_display(
@@ -144,7 +146,7 @@ impl PuzzleadayApplication {
         }
     }
 
-    fn setup(&self, window: &PuzzleadayWindow) {
+    fn setup(&self, window: &PuzzlemoredaysWindow) {
         let puzzle_selection = window.puzzle_selection();
         puzzle_selection.set_selected(0);
         let app_weak = self.downgrade();
@@ -167,7 +169,7 @@ impl PuzzleadayApplication {
         self.setup_puzzle_config(window);
     }
 
-    fn setup_puzzle_config(&self, window: &PuzzleadayWindow) {
+    fn setup_puzzle_config(&self, window: &PuzzlemoredaysWindow) {
         let grid = window.grid();
         let drawing = window.drawing_area();
         let mut widgets_in_grid = self.imp().widgets_in_grid.borrow_mut();
@@ -266,3 +268,4 @@ impl PuzzleadayApplication {
         widgets_in_grid.push(widget);
     }
 }
+

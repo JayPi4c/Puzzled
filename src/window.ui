@@ -2,8 +2,8 @@
 <interface>
     <requires lib="gtk" version="4.0"/>
     <requires lib="Adw" version="1.0"/>
-    <template class="PuzzleadayWindow" parent="AdwApplicationWindow">
-        <property name="title" translatable="yes">PuzzleADay</property>
+    <template class="PuzzlemoredaysWindow" parent="AdwApplicationWindow">
+        <property name="title" translatable="yes">Puzzle More Days</property>
         <property name="default-width">800</property>
         <property name="default-height">600</property>
         <property name="content">
@@ -60,7 +60,7 @@
                 <attribute name="action">app.shortcuts</attribute>
             </item>
             <item>
-                <attribute name="label" translatable="yes">_About PuzzleADay</attribute>
+                <attribute name="label" translatable="yes">_About Puzzle More Days</attribute>
                 <attribute name="action">app.about</attribute>
             </item>
         </section>

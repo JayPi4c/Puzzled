@@ -1,12 +1,12 @@
 {
-    "id" : "de.til7701.PuzzleADay",
+    "id" : "de.til7701.PuzzleMoreDays",
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "48",
     "sdk" : "org.gnome.Sdk",
     "sdk-extensions" : [
         "org.freedesktop.Sdk.Extension.rust-stable"
     ],
-    "command" : "puzzleaday",
+    "command" : "puzzlemoredays",
     "finish-args" : [
         "--share=network",
         "--share=ipc",
@@ -21,7 +21,7 @@
         ],
         "env" : {
             "RUST_BACKTRACE" : "1",
-            "RUST_LOG" : "puzzleaday=debug"
+            "RUST_LOG" : "puzzlemoredays=debug"
         }
     },
     "cleanup" : [
@@ -37,7 +37,7 @@
     ],
     "modules" : [
         {
-            "name" : "puzzleaday",
+            "name" : "puzzlemoredays",
             "builddir" : true,
             "buildsystem" : "meson",
             "sources" : [

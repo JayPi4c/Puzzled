@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=puzzleaday
-Exec=puzzleaday
-Icon=de.til7701.PuzzleADay
+Name=Puzzle More Days
+Exec=puzzlemoredays
+Icon=de.til7701.PuzzleMoreDays
 Terminal=false
 Type=Application
-Categories=Utility;
+Categories=Game;
 Keywords=GTK;
 StartupNotify=true
 DBusActivatable=true
