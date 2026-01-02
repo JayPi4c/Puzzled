@@ -89,6 +89,7 @@ impl PuzzleAreaPresenter {
         let grid_config = self.grid_config.borrow();
         let start_position = start_position_cell.mul_scalar(grid_config.cell_width_pixel as f64);
         tile_view.position_pixels.replace(start_position);
+        tile_view.position_cells.replace(Some(*start_position_cell));
 
         for draggable in tile_view.draggables.iter() {
             self.setup_drag_and_drop(&tile_view, &draggable);
