@@ -20,6 +20,7 @@
 
 mod application;
 mod config;
+mod presenter;
 mod puzzle;
 mod state;
 mod view;

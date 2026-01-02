@@ -1,4 +1,3 @@
-use crate::application::WINDOW_TO_BOARD_RATIO;
 use crate::puzzle::PuzzleConfig;
 use once_cell::sync::Lazy;
 use std::backtrace::Backtrace;
@@ -10,9 +9,6 @@ static APP_STATE: Lazy<Mutex<State>> = Lazy::new(|| Mutex::new(State::default())
 pub struct State {
     pub current_puzzle_index: u32,
     pub puzzle_config: PuzzleConfig,
-    pub grid_cell_width_pixel: u32,
-    pub grid_h_cell_count: u32,
-    pub board_offset_x_cells: i32,
 }
 
 pub fn get_state() -> MutexGuard<'static, State> {
@@ -39,16 +35,9 @@ pub fn get_state() -> MutexGuard<'static, State> {
 impl Default for State {
     fn default() -> Self {
         let puzzle_config = PuzzleConfig::default();
-        let grid_h_cell_count =
-            (puzzle_config.board_layout.dim().1 as f64 * WINDOW_TO_BOARD_RATIO) as u32;
-        let board_offset_x_cells =
-            ((grid_h_cell_count - puzzle_config.board_layout.dim().1 as u32) / 2) as i32;
         State {
             current_puzzle_index: 0,
             puzzle_config,
-            grid_cell_width_pixel: 32,
-            grid_h_cell_count,
-            board_offset_x_cells,
         }
     }
 }

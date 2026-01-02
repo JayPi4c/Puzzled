@@ -19,35 +19,23 @@
  */
 use crate::config::VERSION;
 use crate::puzzle;
-use crate::puzzle::tile::Tile;
-use crate::puzzle::PuzzleConfig;
 use crate::state::get_state;
-use crate::view::TileView;
 use crate::window::PuzzlemoredaysWindow;
 use adw::gdk::Display;
 use adw::glib::property::PropertyGet;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
-use gtk::{
-    gio, glib, CssProvider, Fixed, GestureDrag, PropagationPhase,
-    Widget, STYLE_PROVIDER_PRIORITY_APPLICATION,
-};
-use std::cell::RefCell;
-
-pub const WINDOW_TO_BOARD_RATIO: f64 = 2.5;
+use gtk::{gio, glib, CssProvider, STYLE_PROVIDER_PRIORITY_APPLICATION};
 
 mod imp {
     use super::*;
-    use crate::view::BoardView;
+    use crate::presenter::puzzle_area::PuzzleAreaPresenter;
     use crate::window::PuzzlemoredaysWindow;
-    use std::cell::RefCell;
 
     #[derive(Debug, Default)]
     pub struct PuzzlemoredaysApplication {
-        pub widgets_in_grid: RefCell<Vec<Widget>>,
-        pub tile_views: RefCell<Vec<TileView>>,
-        pub board_view: RefCell<Option<BoardView>>,
+        pub puzzle_area_presenter: PuzzleAreaPresenter,
     }
 
     #[glib::object_subclass]
@@ -87,6 +75,8 @@ mod imp {
             );
 
             window.present();
+
+            application.imp().puzzle_area_presenter.update_layout();
         }
     }
 
@@ -151,160 +141,33 @@ impl PuzzlemoredaysApplication {
     }
 
     fn setup(&self, window: &PuzzlemoredaysWindow) {
+        self.imp().puzzle_area_presenter.set_view(window.grid());
+
         let puzzle_selection = window.puzzle_selection();
         puzzle_selection.set_selected(0);
-        let app_weak = self.downgrade();
-        let window_weak = window.downgrade();
 
-        puzzle_selection.connect_selected_notify(move |dropdown| {
-            let index = dropdown.selected();
-            let puzzle_config = match index {
-                0 => puzzle::get_default_config(),
-                1 => puzzle::get_year_config(),
-                _ => panic!("Unknown puzzle selection index: {}", index),
-            };
-            get_state().puzzle_config = puzzle_config;
+        puzzle_selection.connect_selected_notify({
+            let puzzle_area_presenter = self.imp().puzzle_area_presenter.clone();
+            move |dropdown| {
+                let index = dropdown.selected();
+                let puzzle_config = match index {
+                    0 => puzzle::get_default_config(),
+                    1 => puzzle::get_year_config(),
+                    _ => panic!("Unknown puzzle selection index: {}", index),
+                };
+                get_state().puzzle_config = puzzle_config;
 
-            if let (Some(app), Some(window)) = (app_weak.upgrade(), window_weak.upgrade()) {
-                app.setup_puzzle_config(&window);
+                puzzle_area_presenter.setup_puzzle_config_from_state();
             }
         });
 
-        self.setup_puzzle_config(window);
-
-        let app_weak = self.downgrade();
-        window.connect_default_width_notify(move |w| {
-            if let Some(app) = app_weak.upgrade() {
-                app.on_window_resize(w);
-            }
-        });
-    }
-
-    fn on_window_resize(&self, window: &PuzzlemoredaysWindow) {
-        let width = window.width();
-        let cell_count_width = get_state().grid_h_cell_count;
-        let grid_size = width / cell_count_width as i32;
-        self.update_grid_cell_width_pixel(grid_size as u32);
-    }
-
-    fn update_grid_cell_width_pixel(&self, new_size: u32) {
-        get_state().grid_cell_width_pixel = new_size;
-        if let Some(window) = self.active_window() {
-            if let Some(puzzle_window) = window.downcast_ref::<PuzzlemoredaysWindow>() {
-                self.update_positions(puzzle_window);
-            }
-        }
-    }
-
-    fn update_positions(&self, window: &PuzzlemoredaysWindow) {
-        let grid = window.grid();
-        if let Some(board_view) = self.imp().board_view.borrow().as_ref() {
-            let widget = board_view.parent.clone().upcast::<Widget>();
-            let state = get_state();
-            let x = state.board_offset_x_cells as f64 * state.grid_cell_width_pixel as f64;
-            let y = 0.0;
-            grid.move_(&widget, x, y);
-            for widget in board_view.elements.iter() {
-                widget.set_width_request(state.grid_cell_width_pixel as i32);
-                widget.set_height_request(state.grid_cell_width_pixel as i32);
-            }
-        }
-    }
-
-    fn setup_puzzle_config(&self, window: &PuzzlemoredaysWindow) {
-        let grid = window.grid();
-        let mut widgets_in_grid = self.imp().widgets_in_grid.borrow_mut();
-
-        widgets_in_grid
-            .iter()
-            .for_each(|widget: &Widget| grid.remove(widget));
-        widgets_in_grid.clear();
-
-        let puzzle_config = &get_state().puzzle_config.clone();
-        get_state().grid_h_cell_count =
-            (puzzle_config.board_layout.dim().1 as f64 * WINDOW_TO_BOARD_RATIO) as u32;
-
-        self.setup_board(&grid, puzzle_config, &mut widgets_in_grid);
-
-        let puzzle_config = &get_state().puzzle_config.clone();
-        for tile in &puzzle_config.tiles {
-            self.setup_tile(&grid, tile, &mut widgets_in_grid);
-        }
-    }
-
-    fn setup_tile(&self, grid: &Fixed, tile: &Tile, widgets_in_grid: &mut Vec<Widget>) {
-        let tile_view = TileView::new(tile.id, tile.base.clone());
-        tile_view.put(grid, 0.0, 0.0);
-        tile_view.move_to(grid, 0.0, 0.0);
-        for draggable in tile_view.draggables.iter() {
-            self.setup_drag_and_drop(&tile_view, &draggable, grid);
-        }
-        tile_view
-            .elements_with_offset
-            .borrow()
-            .iter()
-            .map(|e| e.0.clone())
-            .for_each(|w| {
-                widgets_in_grid.push(w);
-            });
-        self.imp().tile_views.borrow_mut().push(tile_view);
-    }
-
-    fn setup_drag_and_drop(&self, tile_view: &TileView, draggable: &Widget, fixed: &Fixed) {
-        let drag = GestureDrag::new();
-        drag.set_propagation_phase(PropagationPhase::Capture);
-
-        let fixed_clone1 = fixed.clone();
-        let tile_view_clone = tile_view.clone();
-        drag.connect_drag_update(move |_, dx, dy| {
-            let (new_x, new_y) = {
-                let (x, y) = (
-                    *tile_view_clone.x_pixels.borrow(),
-                    *tile_view_clone.y_pixels.borrow(),
-                );
-                let new_x = x + dx;
-                let new_y = y + dy;
-                (new_x, new_y)
-            };
-            tile_view_clone.move_to(&fixed_clone1, new_x, new_y);
+        window.connect_default_width_notify({
+            let puzzle_area_presenter = self.imp().puzzle_area_presenter.clone();
+            move |_| puzzle_area_presenter.update_layout()
         });
 
-        let fixed_clone2 = fixed.clone();
-        let tile_view_clone = tile_view.clone();
-        drag.connect_drag_end(move |_, _, _| {
-            let (snapped_x, snapped_y) = {
-                let (x, y) = (
-                    *tile_view_clone.x_pixels.borrow(),
-                    *tile_view_clone.y_pixels.borrow(),
-                );
-                let grid_size = get_state().grid_cell_width_pixel;
-                let snapped_x = (x / grid_size as f64).round() * grid_size as f64;
-                let snapped_y = (y / grid_size as f64).round() * grid_size as f64;
-                (snapped_x, snapped_y)
-            };
-            tile_view_clone.move_to(&fixed_clone2, snapped_x, snapped_y);
-        });
-
-        draggable.add_controller(drag);
-    }
-
-    fn setup_board(
-        &self,
-        grid: &Fixed,
-        puzzle_config: &PuzzleConfig,
-        widgets_in_grid: &mut Vec<Widget>,
-    ) {
-        let board_view = crate::view::BoardView::new(
-            puzzle_config.board_layout.clone(),
-            puzzle_config.meaning_areas.clone(),
-            puzzle_config.meaning_values.clone(),
-        );
-        let widget = board_view.parent.clone().upcast::<Widget>();
-        let state = get_state();
-        let x = state.board_offset_x_cells as f64 * state.grid_cell_width_pixel as f64;
-        let y = 0.0;
-        grid.put(&widget, x, y);
-        widgets_in_grid.push(widget);
-        self.imp().board_view.replace(Some(board_view));
+        self.imp()
+            .puzzle_area_presenter
+            .setup_puzzle_config_from_state();
     }
 }
