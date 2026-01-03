@@ -1,17 +1,15 @@
 use crate::offset::Offset;
 use adw::prelude::Cast;
-use gtk::prelude::{FrameExt, GridExt, WidgetExt};
+use gtk::prelude::{FrameExt, GridExt};
 use gtk::{Grid, Widget};
 use ndarray::Array2;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct TileView {
-    pub elements_with_offset: Rc<RefCell<Vec<(Widget, Offset)>>>,
+    pub elements_with_offset: Vec<(Widget, Offset)>,
     pub draggables: Vec<Widget>,
-    pub position_pixels: Rc<RefCell<Offset>>,
-    pub position_cells: Rc<RefCell<Option<Offset>>>,
+    pub position_pixels: Offset,
+    pub position_cells: Option<Offset>,
 }
 
 impl TileView {
@@ -21,7 +19,7 @@ impl TileView {
         let rows = rows_usize as i32;
         let cols = cols_usize as i32;
 
-        let elements_with_offset: Rc<RefCell<Vec<(Widget, Offset)>>> = {
+        let elements_with_offset: Vec<(Widget, Offset)> = {
             let mut elements: Vec<(Widget, Offset)> = Vec::new();
 
             for r in 0..rows {
@@ -40,14 +38,14 @@ impl TileView {
                 }
             }
 
-            Rc::new(RefCell::new(elements))
+            elements
         };
 
         let tile_view = TileView {
             elements_with_offset,
             draggables,
-            position_pixels: Rc::new(RefCell::new(Offset::default())),
-            position_cells: Rc::new(RefCell::new(None)),
+            position_pixels: Offset::default(),
+            position_cells: None,
         };
 
         tile_view
