@@ -1,4 +1,4 @@
-use crate::offset::Offset;
+use crate::offset::PixelOffset;
 use crate::presenter::puzzle_area::{PuzzleAreaData, WINDOW_TO_BOARD_RATIO};
 use crate::puzzle::PuzzleConfig;
 use crate::view::BoardView;
@@ -23,10 +23,11 @@ impl BoardPresenter {
             puzzle_config.board_layout.clone(),
             puzzle_config.meaning_areas.clone(),
             puzzle_config.meaning_values.clone(),
-        );
+        )
+        .expect("Failed to initialize board view");
         let widget = board_view.parent.clone().upcast::<Widget>();
         let mut data = self.data.borrow_mut();
-        data.add_to_fixed(&widget, &Offset::default());
+        data.add_to_fixed(&widget, &PixelOffset::default());
 
         let grid_h_cell_count =
             (puzzle_config.board_layout.dim().1 as f64 * WINDOW_TO_BOARD_RATIO) as u32;
@@ -35,7 +36,7 @@ impl BoardPresenter {
 
         let grid_config = &mut data.grid_config;
         grid_config.grid_h_cell_count = grid_h_cell_count;
-        grid_config.board_offset_cells = Offset::new(board_offset_x_cells, 1.0);
+        grid_config.board_offset_cells = PixelOffset(board_offset_x_cells, 1.0);
         data.elements_in_fixed.push(widget.clone());
         data.elements_in_fixed.push(widget);
         data.board_view = Some(board_view);
@@ -51,7 +52,7 @@ impl BoardPresenter {
             let pos = grid_config
                 .board_offset_cells
                 .mul_scalar(grid_config.cell_width_pixel as f64);
-            fixed.move_(&widget, pos.x, pos.y);
+            fixed.move_(&widget, pos.0, pos.1);
             for widget in board_view.elements.iter() {
                 widget.set_width_request(grid_config.cell_width_pixel as i32);
                 widget.set_height_request(grid_config.cell_width_pixel as i32);

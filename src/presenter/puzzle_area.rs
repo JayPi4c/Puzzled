@@ -1,4 +1,4 @@
-use crate::offset::Offset;
+use crate::offset::{CellOffset, PixelOffset};
 use crate::presenter::board::BoardPresenter;
 use crate::presenter::tile::TilePresenter;
 use crate::state::get_state;
@@ -15,7 +15,7 @@ pub const WINDOW_TO_BOARD_RATIO: f64 = 2.5;
 pub struct GridConfig {
     pub grid_h_cell_count: u32,
     pub cell_width_pixel: u32,
-    pub board_offset_cells: Offset,
+    pub board_offset_cells: PixelOffset,
 }
 
 #[derive(Debug, Default)]
@@ -28,10 +28,10 @@ pub struct PuzzleAreaData {
 }
 
 impl PuzzleAreaData {
-    pub fn add_to_fixed(&mut self, widget: &Widget, pos: &Offset) {
+    pub fn add_to_fixed(&mut self, widget: &Widget, pos: &PixelOffset) {
         match &self.fixed {
             Some(fixed) => {
-                fixed.put(widget, pos.x, pos.y);
+                fixed.put(widget, pos.0, pos.1);
                 self.elements_in_fixed.push(widget.clone());
             }
             None => {}
@@ -64,15 +64,15 @@ impl PuzzleAreaPresenter {
         let puzzle_config = &state.puzzle_config;
 
         self.board_presenter.setup(puzzle_config);
-        let mut position_start = Offset::new(1.0, 1.0);
+        let mut position_start = CellOffset(1, 1);
         for tile in puzzle_config.tiles.iter() {
             self.tile_presenter.setup(tile, &position_start);
 
             let (rows, cols) = tile.base.dim();
-            position_start.x += (rows + 1) as f64;
-            if position_start.x > 10.0 {
-                position_start.x = 1.0;
-                position_start.y += (cols + 1) as f64;
+            position_start.0 += (rows + 1) as i32;
+            if position_start.0 > 10 {
+                position_start.0 = 1;
+                position_start.1 += (cols + 1) as i32;
             }
         }
 

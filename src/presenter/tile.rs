@@ -1,4 +1,4 @@
-use crate::offset::Offset;
+use crate::offset::{CellOffset, PixelOffset};
 use crate::presenter::puzzle_area::PuzzleAreaData;
 use crate::puzzle::tile::Tile;
 use crate::view::TileView;
@@ -20,7 +20,7 @@ impl TilePresenter {
         self.data = data;
     }
 
-    pub fn setup(&self, tile: &Tile, start_position_cell: &Offset) {
+    pub fn setup(&self, tile: &Tile, start_position_cell: &CellOffset) {
         let mut tile_view = TileView::new(tile.id, tile.base.clone());
 
         let start_position = {
@@ -28,10 +28,10 @@ impl TilePresenter {
             let grid_config = &data.grid_config;
             start_position_cell.mul_scalar(grid_config.cell_width_pixel as f64)
         };
-        tile_view.position_pixels = start_position;
+        tile_view.position_pixels = start_position.into();
         tile_view.position_cells = Some(*start_position_cell);
 
-        for (i, draggable) in tile_view.draggables.iter().enumerate() {
+        for draggable in tile_view.draggables.iter() {
             self.setup_drag_and_drop(tile.id as usize, &draggable);
             self.setup_tile_rotation_and_flip(tile.id as usize, &draggable);
         }
@@ -41,7 +41,7 @@ impl TilePresenter {
             .iter()
             .map(|e| e.0.clone())
             .for_each(|w| {
-                data.add_to_fixed(&w, &start_position);
+                data.add_to_fixed(&w, &start_position.into());
             });
         data.tile_views.push(tile_view);
     }
@@ -100,10 +100,10 @@ impl TilePresenter {
 
     fn calculate_cells_from_pixels(
         &self,
-        pos_pixel: &Offset,
+        pos_pixel: &PixelOffset,
         grid_cell_width_pixel: f64,
-    ) -> Offset {
-        pos_pixel.div_scalar(grid_cell_width_pixel).round()
+    ) -> CellOffset {
+        pos_pixel.div_scalar(grid_cell_width_pixel).round().into()
     }
 
     fn setup_tile_rotation_and_flip(&self, tile_view_index: usize, draggable: &Widget) {
@@ -113,7 +113,7 @@ impl TilePresenter {
         self.setup_tile_offset_updating_gesture(tile_view_index, &gesture, {
             move |offset, tile_view| {
                 let (_, cols) = Self::get_dims(&tile_view.elements_with_offset);
-                Offset::new(-offset.y + (cols - 1.0), offset.x)
+                PixelOffset(-offset.1 + (cols - 1.0), offset.0)
             }
         });
         draggable.add_controller(gesture.clone().upcast::<EventController>());
@@ -124,28 +124,30 @@ impl TilePresenter {
         self.setup_tile_offset_updating_gesture(tile_view_index, &gesture, {
             move |offset, tile_view| {
                 let (rows, _) = Self::get_dims(&tile_view.elements_with_offset);
-                Offset::new(-offset.x + (rows - 1.0), offset.y)
+                PixelOffset(-offset.0 + (rows - 1.0), offset.1)
             }
         });
         draggable.add_controller(gesture.clone().upcast::<EventController>());
     }
 
-    pub fn get_dims(elements_with_offset: &Vec<(Widget, Offset)>) -> (f64, f64) {
+    pub fn get_dims(elements_with_offset: &Vec<(Widget, PixelOffset)>) -> (f64, f64) {
         if elements_with_offset.is_empty() {
             return (0.0, 0.0);
         }
         let max_row = elements_with_offset
             .iter()
-            .map(|(_, o)| o.x)
+            .map(|(_, o)| o.0)
             .fold(f64::NEG_INFINITY, f64::max);
         let max_col = elements_with_offset
             .iter()
-            .map(|(_, o)| o.y)
+            .map(|(_, o)| o.1)
             .fold(f64::NEG_INFINITY, f64::max);
         (max_row + 1.0, max_col + 1.0)
     }
 
-    fn setup_tile_offset_updating_gesture<F: Fn(&Offset, &TileView) -> Offset + 'static>(
+    fn setup_tile_offset_updating_gesture<
+        F: Fn(&PixelOffset, &TileView) -> PixelOffset + 'static,
+    >(
         &self,
         tile_view_index: usize,
         gesture: &GestureClick,
@@ -154,7 +156,7 @@ impl TilePresenter {
         gesture.connect_pressed({
             let self_clone = self.clone();
             move |_, _n_press, _x, _y| {
-                let mut new_offsets: Vec<(Widget, Offset)> = Vec::new();
+                let mut new_offsets: Vec<(Widget, PixelOffset)> = Vec::new();
                 let mut data = self_clone.data.borrow_mut();
                 let tile_view = data.tile_views.get_mut(tile_view_index);
                 let tile_view = match tile_view {
@@ -182,7 +184,7 @@ impl TilePresenter {
             data.tile_views.len()
         };
         for i in 0..len {
-            let pos = {
+            let pos: PixelOffset = {
                 let mut data = self.data.borrow_mut();
                 let grid_size = data.grid_config.cell_width_pixel;
                 let tile_view = &mut data.tile_views[i];
@@ -192,7 +194,7 @@ impl TilePresenter {
                     widget.0.set_height_request(grid_size as i32);
                 }
                 if let Some(position_cells) = tile_view.position_cells {
-                    position_cells.mul_scalar(grid_size as f64)
+                    position_cells.mul_scalar(grid_size as f64).into()
                 } else {
                     tile_view.position_pixels
                 }
@@ -202,7 +204,7 @@ impl TilePresenter {
     }
 
     /// Move the tile to the specified (x, y) position in pixels.
-    fn move_to(&self, tile_view_index: usize, pos_pixel: Offset) {
+    fn move_to(&self, tile_view_index: usize, pos_pixel: PixelOffset) {
         let mut data = self.data.borrow_mut();
         let grid_size = data.grid_config.cell_width_pixel as f64;
         let fixed = {
@@ -215,7 +217,7 @@ impl TilePresenter {
         if let Some(tile_view) = data.tile_views.get_mut(tile_view_index) {
             for (widget, offset) in tile_view.elements_with_offset.iter() {
                 let new = pos_pixel + offset.mul_scalar(grid_size);
-                fixed.move_(widget, new.x, new.y);
+                fixed.move_(widget, new.0, new.1);
             }
             tile_view.position_pixels = pos_pixel;
         }
