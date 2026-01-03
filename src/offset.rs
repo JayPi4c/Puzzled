@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 /// Represents an offset in x and y directions.
 ///
@@ -9,6 +9,10 @@ pub struct PixelOffset(pub f64, pub f64);
 impl PixelOffset {
     pub fn add_other(&self, other: &PixelOffset) -> PixelOffset {
         Self(self.0 + other.0, self.1 + other.1)
+    }
+
+    pub fn subtract_other(&self, other: &PixelOffset) -> PixelOffset {
+        Self(self.0 - other.0, self.1 - other.1)
     }
 
     pub fn add_tuple(&self, other: (f64, f64)) -> PixelOffset {
@@ -48,12 +52,24 @@ impl Add for PixelOffset {
     }
 }
 
+impl Sub for PixelOffset {
+    type Output = PixelOffset;
+
+    fn sub(self, other: PixelOffset) -> PixelOffset {
+        self.subtract_other(&other)
+    }
+}
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct CellOffset(pub i32, pub i32);
 
 impl CellOffset {
     pub fn add_other(&self, other: &CellOffset) -> CellOffset {
         Self(self.0 + other.0, self.1 + other.1)
+    }
+
+    pub fn subtract_other(&self, other: &CellOffset) -> CellOffset {
+        Self(self.0 - other.0, self.1 - other.1)
     }
 
     pub fn add_tuple(&self, other: (i32, i32)) -> CellOffset {
@@ -83,7 +99,13 @@ impl From<(i32, i32)> for CellOffset {
 
 impl From<PixelOffset> for CellOffset {
     fn from(pixel_offset: PixelOffset) -> Self {
-        CellOffset(pixel_offset.0 as i32, pixel_offset.1 as i32)
+        CellOffset(pixel_offset.0.round() as i32, pixel_offset.1.round() as i32)
+    }
+}
+
+impl From<CellOffset> for (usize, usize) {
+    fn from(cell_offset: CellOffset) -> Self {
+        (cell_offset.0 as usize, cell_offset.1 as usize)
     }
 }
 
@@ -92,5 +114,13 @@ impl Add for CellOffset {
 
     fn add(self, other: CellOffset) -> CellOffset {
         self.add_other(&other)
+    }
+}
+
+impl Sub for CellOffset {
+    type Output = CellOffset;
+
+    fn sub(self, other: CellOffset) -> CellOffset {
+        self.subtract_other(&other)
     }
 }

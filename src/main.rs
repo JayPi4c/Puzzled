@@ -23,6 +23,7 @@ mod config;
 mod offset;
 mod presenter;
 mod puzzle;
+mod puzzle_state;
 mod state;
 mod view;
 mod window;

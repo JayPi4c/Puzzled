@@ -38,3 +38,9 @@
 .tile-cell-9 {
     background-color: #5e2121;
 }
+
+.overlap-highlight {
+    border-style: dotted;
+    border-width: 3px;
+    border-color: #A51D2D;
+}

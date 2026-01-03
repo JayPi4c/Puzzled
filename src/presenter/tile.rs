@@ -20,7 +20,12 @@ impl TilePresenter {
         self.data = data;
     }
 
-    pub fn setup(&self, tile: &Tile, start_position_cell: &CellOffset) {
+    pub fn setup(
+        &self,
+        tile: &Tile,
+        start_position_cell: &CellOffset,
+        on_position_changed: Rc<dyn Fn()>,
+    ) {
         let mut tile_view = TileView::new(tile.id, tile.base.clone());
 
         let start_position = {
@@ -32,8 +37,12 @@ impl TilePresenter {
         tile_view.position_cells = Some(*start_position_cell);
 
         for draggable in tile_view.draggables.iter() {
-            self.setup_drag_and_drop(tile.id as usize, &draggable);
-            self.setup_tile_rotation_and_flip(tile.id as usize, &draggable);
+            self.setup_drag_and_drop(tile.id as usize, &draggable, on_position_changed.clone());
+            self.setup_tile_rotation_and_flip(
+                tile.id as usize,
+                &draggable,
+                on_position_changed.clone(),
+            );
         }
         let mut data = self.data.borrow_mut();
         tile_view
@@ -46,9 +55,32 @@ impl TilePresenter {
         data.tile_views.push(tile_view);
     }
 
-    fn setup_drag_and_drop(&self, tile_view_index: usize, draggable: &Widget) {
+    fn setup_drag_and_drop(
+        &self,
+        tile_view_index: usize,
+        draggable: &Widget,
+        on_position_changed: Rc<dyn Fn()>,
+    ) {
         let drag = GestureDrag::new();
         drag.set_propagation_phase(PropagationPhase::Capture);
+
+        drag.connect_drag_begin({
+            let self_clone = self.clone();
+            let on_position_changed = on_position_changed.clone();
+            move |_, _x, _y| {
+                {
+                    let mut data = self_clone.data.borrow_mut();
+                    let tile_view = {
+                        match data.tile_views.get_mut(tile_view_index) {
+                            Some(tv) => tv,
+                            None => return,
+                        }
+                    };
+                    tile_view.position_cells = None;
+                }
+                on_position_changed();
+            }
+        });
 
         drag.connect_drag_update({
             let self_clone = self.clone();
@@ -92,6 +124,7 @@ impl TilePresenter {
                     pos
                 };
                 self_clone.move_to(tile_view_index, snapped);
+                on_position_changed();
             }
         });
 
@@ -106,22 +139,32 @@ impl TilePresenter {
         pos_pixel.div_scalar(grid_cell_width_pixel).round().into()
     }
 
-    fn setup_tile_rotation_and_flip(&self, tile_view_index: usize, draggable: &Widget) {
+    fn setup_tile_rotation_and_flip(
+        &self,
+        tile_view_index: usize,
+        draggable: &Widget,
+        on_position_changed: Rc<dyn Fn()>,
+    ) {
         // Rotation
         let gesture = GestureClick::new();
         gesture.set_button(BUTTON_SECONDARY);
-        self.setup_tile_offset_updating_gesture(tile_view_index, &gesture, {
-            move |offset, tile_view| {
-                let (_, cols) = Self::get_dims(&tile_view.elements_with_offset);
-                PixelOffset(-offset.1 + (cols - 1) as f64, offset.0)
-            }
-        });
+        self.setup_tile_offset_updating_gesture(
+            tile_view_index,
+            &gesture,
+            on_position_changed.clone(),
+            {
+                move |offset, tile_view| {
+                    let (_, cols) = Self::get_dims(&tile_view.elements_with_offset);
+                    PixelOffset(-offset.1 + (cols - 1) as f64, offset.0)
+                }
+            },
+        );
         draggable.add_controller(gesture.clone().upcast::<EventController>());
 
         // Flip
         let gesture = GestureClick::new();
         gesture.set_button(BUTTON_MIDDLE);
-        self.setup_tile_offset_updating_gesture(tile_view_index, &gesture, {
+        self.setup_tile_offset_updating_gesture(tile_view_index, &gesture, on_position_changed, {
             move |offset, tile_view| {
                 let (rows, _) = Self::get_dims(&tile_view.elements_with_offset);
                 PixelOffset(-offset.0 + (rows - 1) as f64, offset.1)
@@ -151,6 +194,7 @@ impl TilePresenter {
         &self,
         tile_view_index: usize,
         gesture: &GestureClick,
+        on_position_changed: Rc<dyn Fn()>,
         new_offset_function: F,
     ) {
         gesture.connect_pressed({
@@ -173,6 +217,7 @@ impl TilePresenter {
                 elements_with_offset.clear();
                 elements_with_offset.extend(new_offsets.into_iter());
                 drop(data);
+                on_position_changed();
                 self_clone.update_layout();
             }
         });

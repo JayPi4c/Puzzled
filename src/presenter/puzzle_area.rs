@@ -1,21 +1,24 @@
 use crate::offset::{CellOffset, PixelOffset};
 use crate::presenter::board::BoardPresenter;
 use crate::presenter::tile::TilePresenter;
+use crate::puzzle_state::{Cell, PuzzleState};
 use crate::state::get_state;
 use crate::view::{BoardView, TileView};
 use gtk::prelude::{FixedExt, WidgetExt};
 use gtk::{Fixed, Widget};
 use std::cell::RefCell;
+use std::mem::take;
 use std::rc::Rc;
 
 pub const WINDOW_TO_BOARD_RATIO: f64 = 2.5;
+pub const OVERLAP_HIGHLIGHT_CSS_CLASS: &str = "overlap-highlight";
 
 /// Configuration for the puzzle grid layout.
 #[derive(Debug, Default)]
 pub struct GridConfig {
     pub grid_h_cell_count: u32,
     pub cell_width_pixel: u32,
-    pub board_offset_cells: PixelOffset,
+    pub board_offset_cells: CellOffset,
 }
 
 #[derive(Debug, Default)]
@@ -66,7 +69,14 @@ impl PuzzleAreaPresenter {
         self.board_presenter.setup(puzzle_config);
         let mut position_start = CellOffset(1, 1);
         for tile in puzzle_config.tiles.iter() {
-            self.tile_presenter.setup(tile, &position_start);
+            self.tile_presenter.setup(
+                tile,
+                &position_start,
+                Rc::new({
+                    let self_clone = self.clone();
+                    move || self_clone.update_highlights()
+                }),
+            );
 
             let (rows, cols) = tile.base.dim();
             position_start.0 += (rows + 1) as i32;
@@ -110,6 +120,80 @@ impl PuzzleAreaPresenter {
             data.tile_views.clear();
             data.board_view = None;
         }
+    }
+
+    pub fn extract_puzzle_state(&self) -> Result<PuzzleState, String> {
+        let mut state = PuzzleState::new(&get_state().puzzle_config);
+        let data = self.data.borrow();
+        let board_position = data.grid_config.board_offset_cells;
+
+        for tile_view in &data.tile_views {
+            let tile_position = tile_view.position_cells.ok_or("Tile position not set")?;
+            let tile_position = tile_position - board_position;
+            for (element, offset) in &tile_view.elements_with_offset {
+                let element_position = tile_position + (*offset).into();
+                if element_position.0 >= 0
+                    && element_position.1 >= 0
+                    && (element_position.0 as usize) < state.grid.dim().0
+                    && (element_position.1 as usize) < state.grid.dim().1
+                {
+                    let idx: (usize, usize) = element_position.into();
+                    let new = match state.grid.get_mut(idx) {
+                        None => return Err("Index out of bounds".to_string()),
+                        Some(cell_ref) => {
+                            let old = take(cell_ref);
+                            match old {
+                                Cell::Empty(data) => Cell::One(data, element.clone()),
+                                Cell::One(data, existing_widget) => {
+                                    let widgets = vec![existing_widget, element.clone()];
+                                    Cell::Many(data, widgets)
+                                }
+                                Cell::Many(data, mut widgets) => {
+                                    widgets.push(element.clone());
+                                    Cell::Many(data, widgets)
+                                }
+                            }
+                        }
+                    };
+                    state.grid[idx] = new;
+                }
+            }
+        }
+        Ok(state)
+    }
+
+    pub fn update_highlights(&self) {
+        self.clear_highlights();
+        let puzzle_state = self.extract_puzzle_state();
+        if let Ok(puzzle_state) = puzzle_state {
+            self.highlight_overlapping_tiles(&puzzle_state);
+        }
+    }
+
+    pub fn highlight_overlapping_tiles(&self, puzzle_state: &PuzzleState) {
+        puzzle_state
+            .grid
+            .iter()
+            .flat_map(|cell| match cell {
+                Cell::Many(_, widgets) => Some(widgets.iter()),
+                _ => None,
+            })
+            .flatten()
+            .for_each(|widget| {
+                widget.set_opacity(0.5);
+                widget.add_css_class(OVERLAP_HIGHLIGHT_CSS_CLASS);
+            });
+    }
+
+    pub fn clear_highlights(&self) {
+        self.data
+            .borrow()
+            .elements_in_fixed
+            .iter()
+            .for_each(|element| {
+                element.set_opacity(1.0);
+                element.remove_css_class(OVERLAP_HIGHLIGHT_CSS_CLASS)
+            });
     }
 }
 
