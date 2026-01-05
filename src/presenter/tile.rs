@@ -263,6 +263,7 @@ impl TilePresenter {
             for (widget, offset) in tile_view.elements_with_offset.iter() {
                 let new = pos_pixel + offset.mul_scalar(grid_size);
                 fixed.move_(widget, new.0, new.1);
+                widget.insert_before(&fixed, None::<&Widget>); // Bring to front
             }
             tile_view.position_pixels = pos_pixel;
         }
