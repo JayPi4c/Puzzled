@@ -3,7 +3,7 @@ use crate::puzzle;
 use crate::state::get_state;
 use crate::view::{create_puzzle_info, create_target_selection_dialog};
 use crate::window::PuzzlemoredaysWindow;
-use adw::prelude::AdwDialogExt;
+use adw::prelude::{AdwDialogExt, AlertDialogExt};
 use gtk::prelude::ButtonExt;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -59,9 +59,9 @@ impl MainPresenter {
             move |_| {
                 if let Some(window) = self_clone.window.borrow().as_ref() {
                     let dialog = create_target_selection_dialog();
-                    dialog.connect_closed({
+                    dialog.connect_response(None, {
                         let self_clone = self_clone.clone();
-                        move |_| {
+                        move |_, _| {
                             self_clone.update_layout();
                             self_clone
                                 .puzzle_area_presenter

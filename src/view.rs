@@ -2,13 +2,15 @@ use crate::offset::{CellOffset, PixelOffset};
 use crate::puzzle::config::{AreaConfig, BoardConfig, Target, TargetIndex};
 use crate::puzzle::PuzzleConfig;
 use crate::state::get_state;
-use adw::prelude::{AdwDialogExt, PreferencesGroupExt};
+use adw::prelude::{AdwDialogExt, AlertDialogExt, AlertDialogExtManual, PreferencesGroupExt};
 use adw::prelude::{Cast, PreferencesDialogExt};
 use adw::prelude::{ComboRowExt, PreferencesPageExt};
-use adw::{ActionRow, ComboRow, Dialog, PreferencesDialog, PreferencesGroup, PreferencesPage};
-use gtk::prelude::{BoxExt, ButtonExt, FrameExt, GridExt};
-use gtk::Orientation::{Horizontal, Vertical};
-use gtk::{Button, Frame, Grid, Label, StringList, Widget};
+use adw::{
+    ActionRow, AlertDialog, ComboRow, Dialog, PreferencesDialog, PreferencesGroup, PreferencesPage,
+    ResponseAppearance,
+};
+use gtk::prelude::{BoxExt, FrameExt, GridExt};
+use gtk::{Frame, Grid, Label, StringList, Widget};
 use ndarray::Array2;
 
 #[derive(Debug, Clone)]
@@ -197,12 +199,10 @@ struct TargetIndexListItem {
     target_index: TargetIndex,
 }
 
-pub fn create_target_selection_dialog() -> Dialog {
-    let dialog = Dialog::builder().title("Select Target Day").build();
+pub fn create_target_selection_dialog() -> AlertDialog {
+    let dialog = AlertDialog::builder().title("Select Target Day").build();
 
-    let content = PreferencesGroup::builder()
-        .title("Select Target Day")
-        .build();
+    let content = PreferencesGroup::builder().build();
 
     let state = get_state();
     let puzzle_config = &state.puzzle_config;
@@ -223,15 +223,27 @@ pub fn create_target_selection_dialog() -> Dialog {
     }
     let dropdowns = dropdowns;
 
-    let accept_button = Button::builder()
-        .label("Accept")
-        .css_classes(vec!["suggested-action".to_string()])
-        .build();
-    accept_button.connect_clicked({
-        let dialog = dialog.clone();
+    let accept_id = "accept";
+    let cancel_id = "cancel";
+    let clear_id = "clear";
+    dialog.add_responses(
+        vec![
+            (accept_id, "Accept"),
+            (cancel_id, "Cancel"),
+            (clear_id, "Clear"),
+        ]
+        .as_ref(),
+    );
+    dialog.set_default_response(Some(accept_id));
+    dialog.set_close_response(cancel_id);
+    dialog.set_response_appearance(accept_id, ResponseAppearance::Suggested);
+    dialog.set_response_appearance(clear_id, ResponseAppearance::Destructive);
+    dialog.set_prefer_wide_layout(true);
+    dialog.connect_response(Some(accept_id), {
         let dropdowns = dropdowns.clone();
         let area_items = area_items.clone();
-        move |_| {
+        move |_, _| {
+            dbg!("Accepted target selection");
             let mut selected_values: Vec<TargetIndex> = Vec::new();
             for (i, dropdown) in dropdowns.iter().enumerate() {
                 let sel = dropdown.selected();
@@ -244,45 +256,25 @@ pub fn create_target_selection_dialog() -> Dialog {
                 indices: selected_values,
             });
             drop(state);
-            dialog.close();
         }
     });
-    let cancel_button = Button::builder().label("Cancel").build();
-    cancel_button.connect_clicked({
-        let dialog = dialog.clone();
-        move |_| {
-            dialog.close();
-        }
-    });
-    let clear_button = Button::builder()
-        .css_classes(vec!["destructive-action".to_string()])
-        .label("Clear")
-        .build();
-    clear_button.connect_clicked({
-        let dialog = dialog.clone();
-        move |_| {
+    dialog.connect_response(Some(clear_id), {
+        move |_, _| {
+            dbg!("Cleared target selection");
             let mut state = get_state();
             state.target_selection = None;
             drop(state);
-            dialog.close();
         }
     });
 
-    let box_buttons = gtk::Box::builder()
-        .orientation(Horizontal)
-        .spacing(5)
+    let page = PreferencesPage::builder()
+        .title("Select Target Day")
         .build();
-    box_buttons.append(&accept_button);
-    box_buttons.append(&cancel_button);
-    box_buttons.append(&clear_button);
-
-    let box_content = gtk::Box::builder().orientation(Vertical).spacing(2).build();
-    box_content.append(&content);
-    box_content.append(&box_buttons);
+    page.add(&content);
 
     drop(state);
-    dialog.set_child(Some(&box_content));
-    dialog.upcast()
+    dialog.set_extra_child(Some(&page));
+    dialog
 }
 
 fn create_dropdown_for_area(
