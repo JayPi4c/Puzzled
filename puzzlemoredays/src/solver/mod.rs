@@ -4,9 +4,6 @@ use crate::state::SolverStatus;
 use std::thread;
 use std::time::Duration;
 
-mod bitmask;
-mod tile;
-
 #[derive(Debug, Clone)]
 pub struct SolverCallId(u64);
 

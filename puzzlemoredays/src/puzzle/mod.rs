@@ -3,7 +3,6 @@ pub mod config;
 use crate::puzzle::config::AreaValueFormatter::{Nth, Plain};
 pub(crate) use crate::puzzle::config::PuzzleConfig;
 use crate::puzzle::config::{AreaConfig, SolutionStatistics, TargetTemplate, TileConfig};
-use crate::util::transform;
 use ndarray::{arr2, Array2};
 
 fn default_tiles() -> Vec<Array2<bool>> {
@@ -172,10 +171,10 @@ fn year_board_meaning_display_values() -> Array2<String> {
 
 pub fn get_default_config() -> PuzzleConfig {
     let tiles = create_tiles(&mut default_tiles());
-    let board_layout = transform(&mut default_board_layout());
-    let area_indices = transform(&mut default_board_meaning_areas());
-    let display_values = transform(&mut default_board_display_values());
-    let value_order = transform(&mut default_board_value_order());
+    let board_layout = default_board_layout().reversed_axes();
+    let area_indices = default_board_meaning_areas().reversed_axes();
+    let display_values = default_board_display_values().reversed_axes();
+    let value_order = default_board_value_order().reversed_axes();
     PuzzleConfig::new(
         "Default Puzzle".to_string(),
         board_layout,
@@ -200,10 +199,10 @@ pub fn get_default_config() -> PuzzleConfig {
 
 pub fn get_year_config() -> PuzzleConfig {
     let tiles = create_tiles(&mut year_tiles());
-    let board_layout = transform(&mut year_board_layout());
-    let area_indices = transform(&mut year_board_meaning_areas());
-    let display_values = transform(&mut year_board_meaning_display_values());
-    let value_order = transform(&mut year_board_value_order());
+    let board_layout = year_board_layout().reversed_axes();
+    let area_indices = year_board_meaning_areas().reversed_axes();
+    let display_values = year_board_meaning_display_values().reversed_axes();
+    let value_order = year_board_value_order().reversed_axes();
     PuzzleConfig::new(
         "Year Puzzle".to_string(),
         board_layout,
@@ -230,8 +229,8 @@ pub fn get_year_config() -> PuzzleConfig {
 
 fn create_tiles(tile_data_list: &mut Vec<Array2<bool>>) -> Vec<TileConfig> {
     let mut tiles: Vec<TileConfig> = Vec::new();
-    for (i, tile_data) in tile_data_list.iter_mut().enumerate() {
-        let transformed_data = transform(tile_data);
+    for (i, tile_data) in tile_data_list.iter().enumerate() {
+        let transformed_data = tile_data.clone().reversed_axes();
         tiles.push(TileConfig::new(i as i32, transformed_data));
     }
     tiles

@@ -1,4 +1,4 @@
-use crate::util::{rotate_90, transform};
+use crate::array_util::rotate_90;
 use ndarray::Array2;
 use std::collections::HashSet;
 
@@ -22,7 +22,7 @@ impl Tile {
         tmp = rotate_90(&tmp);
         all_rotations_set.insert(tmp.clone());
 
-        tmp = transform(&mut base.clone());
+        tmp = base.clone().reversed_axes();
         all_rotations_set.insert(tmp.clone());
 
         tmp = rotate_90(&tmp);
