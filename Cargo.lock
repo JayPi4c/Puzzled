@@ -719,22 +719,12 @@ dependencies = [
 [[package]]
 name = "puzzle_solver"
 version = "0.1.0"
-
-[[package]]
-name = "puzzlemoredays"
-version = "0.1.0"
 dependencies = [
- "gettext-rs",
- "gtk4",
- "libadwaita",
  "ndarray",
- "once_cell",
- "puzzle_solver",
- "rand",
 ]
 
 [[package]]
-name = "puzzlemoredays-ui"
+name = "puzzlemoredays"
 version = "0.1.0"
 dependencies = [
  "gettext-rs",
