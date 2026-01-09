@@ -33,9 +33,10 @@ pub fn get_state() -> MutexGuard<'static, State> {
 impl Default for State {
     fn default() -> Self {
         let puzzle_config = PuzzleConfig::default();
+        let default_target = puzzle_config.default_target.clone();
         State {
             puzzle_config,
-            target_selection: None,
+            target_selection: default_target,
             solver_status: SolverStatus::Disabled,
         }
     }

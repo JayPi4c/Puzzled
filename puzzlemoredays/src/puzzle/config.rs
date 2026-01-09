@@ -1,6 +1,6 @@
 use crate::puzzle::get_default_config;
 use ndarray::Array2;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display, Formatter};
 
 /// Configuration for a puzzle. It describes the board layout and tiles.
 /// It additionally contains configuration for the areas to show in the target selection.
@@ -14,6 +14,7 @@ pub struct PuzzleConfig {
     /// The tiles that can be placed on the board.
     pub tiles: Vec<TileConfig>,
     pub solution_statistics: Option<SolutionStatistics>,
+    pub default_target: Option<Target>,
     target_template: TargetTemplate,
 }
 
@@ -27,6 +28,7 @@ impl PuzzleConfig {
         area_configs: Vec<AreaConfig>,
         tiles: Vec<TileConfig>,
         solution_statistics: Option<SolutionStatistics>,
+        default_target: Option<Target>,
         target_template: TargetTemplate,
     ) -> PuzzleConfig {
         PuzzleConfig {
@@ -40,6 +42,7 @@ impl PuzzleConfig {
             ),
             tiles,
             solution_statistics,
+            default_target,
             target_template,
         }
     }
@@ -212,5 +215,11 @@ pub struct TargetIndex(pub usize, pub usize);
 impl PartialEq<(i32, i32)> for TargetIndex {
     fn eq(&self, other: &(i32, i32)) -> bool {
         self.0 as i32 == other.0 && self.1 as i32 == other.1
+    }
+}
+
+impl Display for TargetIndex {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.0, self.1)
     }
 }

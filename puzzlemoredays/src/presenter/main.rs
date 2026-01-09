@@ -23,6 +23,7 @@ impl MainPresenter {
     }
 
     pub fn setup(&self, window: &PuzzlemoredaysWindow) {
+        self.update_target_selection_button();
         self.window.replace(Some(window.clone()));
         let puzzle_area_presenter = self.puzzle_area_presenter.borrow();
         puzzle_area_presenter.set_view(window.grid());
@@ -45,8 +46,8 @@ impl MainPresenter {
                     _ => panic!("Unknown puzzle selection index: {}", index),
                 };
                 let mut state = get_state();
+                state.target_selection = puzzle_config.default_target.clone();
                 state.puzzle_config = puzzle_config;
-                state.target_selection = None;
                 drop(state);
 
                 puzzle_area_presenter.setup_puzzle_config_from_state(Rc::new({
@@ -98,6 +99,10 @@ impl MainPresenter {
 
     pub fn update_layout(&self) {
         self.puzzle_area_presenter.borrow().update_layout();
+        self.update_target_selection_button();
+    }
+
+    fn update_target_selection_button(&self) {
         if let Some(window) = self.window.borrow().as_ref() {
             let state = get_state();
             let target_selection = &state.target_selection;

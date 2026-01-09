@@ -2,8 +2,11 @@ pub mod config;
 
 use crate::puzzle::config::AreaValueFormatter::{Nth, Plain};
 pub(crate) use crate::puzzle::config::PuzzleConfig;
-use crate::puzzle::config::{AreaConfig, SolutionStatistics, TargetTemplate, TileConfig};
+use crate::puzzle::config::{
+    AreaConfig, SolutionStatistics, Target, TargetIndex, TargetTemplate, TileConfig,
+};
 use ndarray::{arr2, Array2};
+use time::OffsetDateTime;
 
 fn default_tiles() -> Vec<Array2<bool>> {
     vec![
@@ -73,6 +76,28 @@ fn default_board_display_values() -> Array2<String> {
         ["29", "30", "31", "", "", "", ""],
     ])
     .mapv(str::to_string)
+}
+
+fn get_default_target_for_default() -> Option<Target> {
+    let date = OffsetDateTime::now_local();
+    match date {
+        Ok(date) => {
+            let value_order = default_board_value_order().reversed_axes();
+            let area_indices = default_board_meaning_areas().reversed_axes();
+
+            let day = date.day() as i32;
+            let day_target_index =
+                find_index_for_value_in_area(day, 0, &value_order, &area_indices)?;
+            let month = date.month() as i32;
+            let month_target_index =
+                find_index_for_value_in_area(month, 1, &value_order, &area_indices)?;
+
+            Some(Target {
+                indices: vec![day_target_index, month_target_index],
+            })
+        }
+        Err(_) => None,
+    }
 }
 
 fn year_tiles() -> Vec<Array2<bool>> {
@@ -169,6 +194,40 @@ fn year_board_meaning_display_values() -> Array2<String> {
     .mapv(str::to_string)
 }
 
+fn get_default_target_for_year() -> Option<Target> {
+    let date = OffsetDateTime::now_local();
+    match date {
+        Ok(date) => {
+            let value_order = year_board_value_order().reversed_axes();
+            let area_indices = year_board_meaning_areas().reversed_axes();
+
+            let day = date.day() as i32;
+            let day_target_index =
+                find_index_for_value_in_area(day, 0, &value_order, &area_indices)?;
+            let month = date.month() as i32;
+            let month_target_index =
+                find_index_for_value_in_area(month, 1, &value_order, &area_indices)?;
+            let year = date.year();
+            let second_to_last_digit = (year % 100) / 10;
+            let last_digit = year % 10;
+            let second_to_last_digit_target_index =
+                find_index_for_value_in_area(second_to_last_digit, 2, &value_order, &area_indices)?;
+            let last_digit_target_index =
+                find_index_for_value_in_area(last_digit, 3, &value_order, &area_indices)?;
+
+            Some(Target {
+                indices: vec![
+                    day_target_index,
+                    month_target_index,
+                    second_to_last_digit_target_index,
+                    last_digit_target_index,
+                ],
+            })
+        }
+        Err(_) => None,
+    }
+}
+
 pub fn get_default_config() -> PuzzleConfig {
     let tiles = create_tiles(&mut default_tiles());
     let board_layout = default_board_layout().reversed_axes();
@@ -193,6 +252,7 @@ pub fn get_default_config() -> PuzzleConfig {
             mean_per_target: 40,
             total_solutions: 25061,
         }),
+        get_default_target_for_default(),
         TargetTemplate::new("{0} of {1}"),
     )
 }
@@ -223,6 +283,7 @@ pub fn get_year_config() -> PuzzleConfig {
             mean_per_target: 103348,
             total_solutions: 1391023514,
         }),
+        get_default_target_for_year(),
         TargetTemplate::new("{0} of {1} {2}{3}"),
     )
 }
@@ -234,4 +295,18 @@ fn create_tiles(tile_data_list: &mut Vec<Array2<bool>>) -> Vec<TileConfig> {
         tiles.push(TileConfig::new(i as i32, transformed_data));
     }
     tiles
+}
+
+fn find_index_for_value_in_area(
+    board_value: i32,
+    area_index: i32,
+    board_values: &Array2<i32>,
+    area_indices: &Array2<i32>,
+) -> Option<TargetIndex> {
+    for ((x, y), &value) in board_values.indexed_iter() {
+        if value == board_value && area_indices[[x, y]] == area_index {
+            return Some(TargetIndex(x, y));
+        }
+    }
+    None
 }

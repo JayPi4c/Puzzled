@@ -760,6 +760,7 @@ dependencies = [
  "once_cell",
  "puzzle_solver",
  "simple_logger",
+ "time",
 ]
 
 [[package]]
