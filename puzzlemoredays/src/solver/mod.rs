@@ -1,6 +1,7 @@
 use crate::puzzle::config::Target;
 use crate::puzzle_state::{Cell, PuzzleState};
 use crate::state::SolverStatus;
+use log::debug;
 use puzzle_solver::board::Board;
 use puzzle_solver::tile::Tile;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -43,7 +44,12 @@ pub fn solve_for_target(
 }
 
 pub fn interrupt_solver_call(call_id: &SolverCallId) {
-    dbg!("Interrupting solver call: {:?}", call_id);
+    debug!("Interrupting solver call: {:?}", call_id);
+}
+
+pub fn is_solved(puzzle_state: &PuzzleState, target: &Target) -> bool {
+    let board = create_board(puzzle_state, target);
+    board.get_array().iter().all(|cell| *cell)
 }
 
 fn create_board(puzzle_state: &PuzzleState, target: &Target) -> Board {

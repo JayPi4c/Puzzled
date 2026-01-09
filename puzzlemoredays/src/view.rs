@@ -202,7 +202,7 @@ struct TargetIndexListItem {
 }
 
 pub fn create_target_selection_dialog() -> AlertDialog {
-    let dialog = AlertDialog::builder().title("Select Target Day").build();
+    let dialog = AlertDialog::builder().heading("Select Target Day").build();
 
     let content = PreferencesGroup::builder().build();
 
@@ -331,4 +331,16 @@ fn create_dropdown_for_area(
 
     content.add(&dropdown);
     (items, dropdown)
+}
+
+pub fn create_solved_dialog() -> AlertDialog {
+    let dialog = AlertDialog::builder().heading("Puzzle Solved!").build();
+
+    let ok_id = "ok";
+    dialog.add_response(ok_id, "OK");
+    dialog.set_default_response(Some(ok_id));
+    dialog.set_close_response(ok_id);
+    dialog.set_response_appearance(ok_id, ResponseAppearance::Suggested);
+
+    dialog
 }

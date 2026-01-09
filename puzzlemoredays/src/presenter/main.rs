@@ -1,7 +1,7 @@
 use crate::presenter::puzzle_area::PuzzleAreaPresenter;
-use crate::solver::interrupt_solver_call;
+use crate::solver::{interrupt_solver_call, is_solved};
 use crate::state::{get_state, SolverStatus};
-use crate::view::{create_puzzle_info, create_target_selection_dialog};
+use crate::view::{create_puzzle_info, create_solved_dialog, create_target_selection_dialog};
 use crate::window::PuzzlemoredaysWindow;
 use crate::{puzzle, solver};
 use adw::glib;
@@ -126,6 +126,15 @@ impl MainPresenter {
             Some(target) => target.clone(),
             None => return,
         };
+
+        if is_solved(&puzzle_state, &target) {
+            state.solver_status = SolverStatus::Done { solvable: true };
+            drop(state);
+            self.set_solver_status(&SolverStatus::Done { solvable: true });
+            self.show_solved_dialog();
+            return;
+        }
+
         let solver_status = &state.solver_status;
         match solver_status {
             SolverStatus::Running { call_id } => interrupt_solver_call(&call_id),
@@ -187,6 +196,13 @@ impl MainPresenter {
                     }
                 }
             }
+        }
+    }
+
+    fn show_solved_dialog(&self) {
+        if let Some(window) = self.window.borrow().as_ref() {
+            let dialog = create_solved_dialog();
+            dialog.present(Some(window));
         }
     }
 }
