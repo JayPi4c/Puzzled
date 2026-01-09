@@ -29,6 +29,7 @@ mod imp {
     use super::*;
     use crate::presenter::main::MainPresenter;
     use crate::window::PuzzlemoredaysWindow;
+    use simple_logger::SimpleLogger;
 
     #[derive(Debug, Default)]
     pub struct PuzzlemoredaysApplication {
@@ -57,6 +58,7 @@ mod imp {
         // tries to launch a "second instance" of the application. When they try
         // to do that, we'll just present any existing window.
         fn activate(&self) {
+            SimpleLogger::new().init().unwrap();
             let application = self.obj();
             // Get the current window or create one if necessary
             let window = application.active_window().unwrap_or_else(|| {
@@ -72,8 +74,6 @@ mod imp {
             );
 
             window.present();
-
-            dbg!(puzzle_solver::add(1, 2));
         }
     }
 

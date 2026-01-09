@@ -10,4 +10,5 @@ gtk = { workspace = true, package = "gtk4", features = ["gnome_47"] }
 adw = { workspace = true, package = "libadwaita", features = ["v1_7"] }
 ndarray = { workspace = true }
 once_cell = { workspace = true }
-rand = { workspace = true }
+log = { workspace = true }
+simple_logger = { workspace = true }

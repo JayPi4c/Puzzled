@@ -3,6 +3,7 @@ use crate::puzzle::config::Target;
 use crate::puzzle::PuzzleConfig;
 use gtk::Widget;
 use ndarray::Array2;
+use std::collections::HashSet;
 
 #[derive(Default, Debug)]
 pub struct CellData {
@@ -24,9 +25,15 @@ impl Default for Cell {
     }
 }
 
+#[derive(Debug, Hash, PartialEq, Eq)]
+pub struct UnusedTile {
+    pub base: Array2<bool>,
+}
+
 #[derive(Debug)]
 pub struct PuzzleState {
     pub grid: Array2<Cell>,
+    pub unused_tiles: HashSet<UnusedTile>,
 }
 
 impl PuzzleState {
@@ -59,7 +66,10 @@ impl PuzzleState {
             });
         }
 
-        PuzzleState { grid }
+        PuzzleState {
+            grid,
+            unused_tiles: HashSet::new(),
+        }
     }
 
     fn is_adjacent_to_allowed(position: (i32, i32), puzzle_config: &PuzzleConfig) -> bool {

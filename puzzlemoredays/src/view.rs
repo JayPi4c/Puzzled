@@ -19,6 +19,7 @@ pub struct TileView {
     pub draggables: Vec<Widget>,
     pub position_pixels: PixelOffset,
     pub position_cells: Option<CellOffset>,
+    pub tile_base: Array2<bool>,
 }
 
 impl TileView {
@@ -45,6 +46,7 @@ impl TileView {
             draggables,
             position_pixels: PixelOffset::default(),
             position_cells: None,
+            tile_base: base,
         }
     }
 }

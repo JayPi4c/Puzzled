@@ -6,6 +6,16 @@ pub fn rotate_90(array: &Array2<bool>) -> Array2<bool> {
     array
 }
 
+pub fn debug_print(array: &Array2<bool>) {
+    for col in array.columns() {
+        let row_str: String = col
+            .iter()
+            .map(|&cell| if cell { '#' } else { '.' })
+            .collect();
+        log::debug!("{}", row_str);
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::array_util::rotate_90;

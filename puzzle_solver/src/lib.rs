@@ -1,18 +1,32 @@
+use crate::tile::Tile;
+
 mod array_util;
 mod bitmask;
-mod tile;
+pub mod board;
+pub mod tile;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+pub struct Solution {
+    pub placements: Vec<TilePlacement>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub struct TilePlacement {
+    pub tile: Tile,
+    pub position: (usize, usize),
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+pub enum UnsolvableReason {
+    TooFewTiles,
+    TooManyTiles,
+    NoFit,
+}
+
+pub fn solve_all_filling(
+    board: board::Board,
+    tiles: &[Tile],
+) -> Result<Solution, UnsolvableReason> {
+    board.debug_print();
+    for tile in tiles {
+        tile.debug_print();
     }
+    Err(UnsolvableReason::NoFit)
 }

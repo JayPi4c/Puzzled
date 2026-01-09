@@ -4,7 +4,7 @@ use crate::presenter::puzzle_area::HighlightMode::{OutOfBounds, Overlapping};
 use crate::presenter::tile::TilePresenter;
 use crate::puzzle::config::TileConfig;
 use crate::puzzle::PuzzleConfig;
-use crate::puzzle_state::{Cell, PuzzleState};
+use crate::puzzle_state::{Cell, PuzzleState, UnusedTile};
 use crate::state::get_state;
 use crate::view::{BoardView, TileView};
 use gtk::prelude::{FixedExt, WidgetExt};
@@ -236,6 +236,11 @@ impl PuzzleAreaPresenter {
                         }
                     };
                     state.grid[idx] = new;
+                } else {
+                    let unused_tile = UnusedTile {
+                        base: tile_view.tile_base.clone(),
+                    };
+                    state.unused_tiles.insert(unused_tile);
                 }
             }
         }
