@@ -49,7 +49,7 @@ pub fn place_on_all_positions(parent: &Array2<bool>, child: &Array2<bool>) -> Ve
     let child_cols = child.ncols();
 
     if child_rows > parent_rows || child_cols > parent_cols {
-        panic!("Child array is larger than parent array");
+        return placements;
     }
 
     for row_offset in 0..=(parent_rows - child_rows) {
@@ -193,6 +193,65 @@ mod test {
         ]);
         remove_true_rows_cols_from_sides(&mut array);
         let expected = arr2(&[[true, false, false], [false, true, false]]);
+        assert_eq!(expected, array);
+    }
+
+    #[test]
+    fn test_remove_true_rows_cols_from_left() {
+        let mut array = arr2(&[[true, true, false, false], [true, false, true, false]]);
+        remove_true_rows_cols_from_sides(&mut array);
+        let expected = arr2(&[[true, false, false], [false, true, false]]);
+        assert_eq!(expected, array);
+    }
+
+    #[test]
+    fn test_remove_true_rows_cols_from_right() {
+        let mut array = arr2(&[[false, false, true, true], [false, true, false, true]]);
+        remove_true_rows_cols_from_sides(&mut array);
+        let expected = arr2(&[[false, false, true], [false, true, false]]);
+        assert_eq!(expected, array);
+    }
+
+    #[test]
+    fn test_remove_true_rows_cols_from_top() {
+        let mut array = arr2(&[
+            [true, true, true],
+            [false, true, false],
+            [true, false, true],
+        ]);
+        remove_true_rows_cols_from_sides(&mut array);
+        let expected = arr2(&[[false, true, false], [true, false, true]]);
+        assert_eq!(expected, array);
+    }
+
+    #[test]
+    fn test_remove_true_rows_cols_from_bottom() {
+        let mut array = arr2(&[
+            [false, true, false],
+            [true, false, true],
+            [true, true, true],
+        ]);
+        remove_true_rows_cols_from_sides(&mut array);
+        let expected = arr2(&[[false, true, false], [true, false, true]]);
+        assert_eq!(expected, array);
+    }
+
+    #[test]
+    fn test_remove_true_rows_cols_test() {
+        let mut array = arr2(&[
+            [false, false, false, false],
+            [false, false, false, false],
+            [true, true, true, true],
+            [false, true, false, true],
+            [true, true, true, true],
+        ]);
+        remove_true_rows_cols_from_sides(&mut array);
+        let expected = arr2(&[
+            [false, false, false, false],
+            [false, false, false, false],
+            [true, true, true, true],
+            [false, true, false, true],
+        ]);
         assert_eq!(expected, array);
     }
 }

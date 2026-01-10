@@ -3,6 +3,7 @@ use crate::board::Board;
 use crate::core::PositionedTile;
 use crate::result::{Solution, UnsolvableReason};
 use crate::tile::Tile;
+use log::debug;
 
 mod array_util;
 mod bitmask;
@@ -12,14 +13,19 @@ pub mod result;
 pub mod tile;
 
 pub fn solve_all_filling(board: Board, tiles: &[Tile]) -> Result<Solution, UnsolvableReason> {
+    debug!("Solving all filling");
+    debug!("Input: ");
     board.debug_print();
     for tile in tiles {
         tile.debug_print();
     }
+    debug!("End of input");
 
     let mut board = board;
     board.trim();
     board.debug_print();
+    board.debug_print();
+    debug!("{}", board.get_array());
 
     let board_bitmask = Bitmask::from(board.get_array());
     let positioned_tiles: Vec<PositionedTile> = tiles

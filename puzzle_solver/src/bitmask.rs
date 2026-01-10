@@ -8,14 +8,20 @@ const BITMASK_ARRAY_LENGTH: usize = 1;
 const TOTAL_BITS: usize = BITMASK_ARRAY_LENGTH * BITS_IN_PRIMITIVE;
 
 pub struct Bitmask {
+    relevant_bits: usize,
     bits: [u128; BITMASK_ARRAY_LENGTH],
 }
 
 impl Bitmask {
-    pub fn new() -> Self {
+    pub fn new(length: usize) -> Self {
         Bitmask {
+            relevant_bits: length,
             bits: [0; BITMASK_ARRAY_LENGTH],
         }
+    }
+
+    pub fn get_relevant_bits(&self) -> usize {
+        self.relevant_bits
     }
 
     pub fn or(&mut self, a: &Bitmask, b: &Bitmask) {
@@ -94,6 +100,10 @@ impl Bitmask {
         count
     }
 
+    pub fn all_relevant_bits_set(&self) -> bool {
+        self.count_ones() == self.relevant_bits as u32
+    }
+
     pub fn and_xor_count_ones(a: &Bitmask, b: &Bitmask, c: &Bitmask) -> u32 {
         match BITMASK_ARRAY_LENGTH {
             1 => ((a.bits[0] & b.bits[0]) ^ c.bits[0]).count_ones(),
@@ -123,7 +133,7 @@ impl Bitmask {
 
     pub fn to_string(&self, board_width: i32) -> String {
         let mut output = String::new();
-        for bit_index in 0..TOTAL_BITS {
+        for bit_index in 0..self.relevant_bits as usize {
             if bit_index as i32 % board_width == 0 && bit_index != 0 {
                 output.push('_');
             }
@@ -132,19 +142,6 @@ impl Bitmask {
             output.push(symbol);
         }
         output
-
-        // let mut output = String::new();
-        // let bits_per_row = board_width as usize;
-        // for row_start in (0..TOTAL_BITS).step_by(bits_per_row) {
-        //     for col in 0..bits_per_row {
-        //         let index = row_start + col;
-        //         let bit_set = self[index];
-        //         let symbol = if bit_set { '1' } else { '0' };
-        //         output.push(symbol);
-        //     }
-        //     output.push('\n');
-        // }
-        // output
     }
 
     pub fn fmt(&self, f: &mut Formatter<'_>, board_width: i32) -> std::fmt::Result {
@@ -156,7 +153,7 @@ impl BitOr for Bitmask {
     type Output = Bitmask;
 
     fn bitor(self, rhs: Self) -> Self::Output {
-        let mut output = Bitmask::new();
+        let mut output = Bitmask::new(self.relevant_bits);
         Bitmask::or(&mut output, &rhs, &self);
         output
     }
@@ -166,7 +163,7 @@ impl BitXor for Bitmask {
     type Output = Bitmask;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
-        let mut output = Bitmask::new();
+        let mut output = Bitmask::new(self.relevant_bits);
         Bitmask::xor(&mut output, &rhs, &self);
         output
     }
@@ -176,7 +173,7 @@ impl BitAnd for Bitmask {
     type Output = Bitmask;
 
     fn bitand(self, rhs: Self) -> Self::Output {
-        let mut output = Bitmask::new();
+        let mut output = Bitmask::new(self.relevant_bits);
         Bitmask::and(&mut output, &rhs, &self);
         output
     }
@@ -184,13 +181,14 @@ impl BitAnd for Bitmask {
 
 impl Default for Bitmask {
     fn default() -> Self {
-        Self::new()
+        Self::new(TOTAL_BITS)
     }
 }
 
 impl From<&Array2<bool>> for Bitmask {
     fn from(value: &Array2<bool>) -> Self {
-        let mut bitmask = Bitmask::new();
+        let mut bitmask = Bitmask::new(TOTAL_BITS);
+        bitmask.relevant_bits = value.iter().count();
         let (xs, ys) = value.dim();
         for x in 0..ys {
             for y in 0..xs {
@@ -206,7 +204,7 @@ impl From<&Array2<bool>> for Bitmask {
 
 impl Clone for Bitmask {
     fn clone(&self) -> Self {
-        let mut new_bitmask = Bitmask::new();
+        let mut new_bitmask = Bitmask::new(self.relevant_bits);
         for i in 0..BITMASK_ARRAY_LENGTH {
             new_bitmask.bits[i] = self.bits[i];
         }

@@ -14,15 +14,16 @@ pub struct PositionedTile {
 
 impl PositionedTile {
     pub fn new(tile_index: usize, tile: &Tile, board: &Board) -> Self {
-        let all_placements: Vec<Array2<bool>> =
-            array_util::place_on_all_positions(board.get_array(), &tile.base)
-                .iter()
-                .map(|array| {
-                    let mut array = array.clone();
-                    array_util::remove_parent(board.get_array(), &mut array);
-                    array
-                })
-                .collect();
+        let all_placements: Vec<Array2<bool>> = tile
+            .all_rotations
+            .iter()
+            .flat_map(|rotation| array_util::place_on_all_positions(board.get_array(), rotation))
+            .map(|array| {
+                let mut array = array.clone();
+                array_util::remove_parent(board.get_array(), &mut array);
+                array
+            })
+            .collect();
 
         all_placements.iter().for_each(|placement| {
             array_util::debug_print(placement);
@@ -84,19 +85,19 @@ fn prepare_solvers(
         debug!("Preparing solver with first tile placement index {}:", i);
         debug!("{}", placement.to_string(board_width));
         if board_bitmask.and_is_zero(&placement) {
-            if board_bitmask.and_is_zero(placement) {
-                let mut used_tile_indices: Vec<usize> = vec![0; positioned_tiles.len()];
-                used_tile_indices[0] = i;
+            let mut board_with_placements = board_bitmask.clone();
+            board_with_placements.xor(board_bitmask, placement);
+            let mut used_tile_indices: Vec<usize> = vec![0; 1];
+            used_tile_indices[0] = i;
 
-                let solver = RecursiveSolver::new(
-                    board_width,
-                    board_bitmask,
-                    &used_tile_indices,
-                    positioned_tiles,
-                );
+            let solver = RecursiveSolver::new(
+                board_width,
+                &board_with_placements,
+                &used_tile_indices,
+                positioned_tiles,
+            );
 
-                solvers.push(solver);
-            }
+            solvers.push(solver);
         }
     }
 
@@ -126,13 +127,16 @@ impl RecursiveSolver {
         for used_tile_index in used_tile_indices {
             use_tile_indices_vec.push(*used_tile_index);
         }
+        for _ in used_tile_indices.len()..num_tiles {
+            use_tile_indices_vec.push(0);
+        }
         RecursiveSolver {
             board_width,
             start_tile_index: used_tile_indices.len(),
             positioned_tiles,
             board_bitmasks: vec![board_bitmasks.clone(); num_tiles],
             used_tile_indices: use_tile_indices_vec,
-            tmp_bitmask: Bitmask::new(),
+            tmp_bitmask: Bitmask::new(board_bitmasks.get_relevant_bits()),
         }
     }
 
@@ -142,13 +146,12 @@ impl RecursiveSolver {
 
     pub fn solve_recursive(&mut self, tile_index: usize) -> bool {
         if tile_index >= self.positioned_tiles.len() {
-            return true;
+            return self.submit_solution();
         }
 
         let num_placements = self.positioned_tiles[tile_index].bitmasks.len();
         for i in 0..num_placements {
             let placement = &self.positioned_tiles[tile_index].bitmasks[i];
-
             if self.board_bitmasks[tile_index - 1].and_is_zero(&placement) {
                 self.tmp_bitmask
                     .xor(&self.board_bitmasks[tile_index - 1], &placement);
@@ -161,5 +164,26 @@ impl RecursiveSolver {
         }
 
         false
+    }
+
+    fn submit_solution(&self) -> bool {
+        debug!("Submitting solution...");
+        self.print_debug();
+        let board_filled = self.board_bitmasks.last().unwrap().all_relevant_bits_set();
+        board_filled
+    }
+
+    pub fn print_debug(&self) {
+        debug!("RecursiveSolver Debug Info:");
+        debug!("Board Width: {}", self.board_width);
+        debug!("Start Tile Index: {}", self.start_tile_index);
+        debug!("Used Tile Indices: {:?}", self.used_tile_indices);
+        for (i, bitmask) in self.board_bitmasks.iter().enumerate() {
+            debug!(
+                "Board Bitmask after tile {}: {}",
+                i,
+                bitmask.to_string(self.board_width)
+            );
+        }
     }
 }
