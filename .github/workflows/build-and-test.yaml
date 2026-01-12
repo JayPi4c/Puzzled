@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Install Flatpak
         run: |
-          flatpak install --user org.flatpak.Builder
+          flatpak install flathub -y org.flatpak.Builder
       - uses: actions/checkout@v6.0.2
       - name: Run Lint on Manifest
         run: |
