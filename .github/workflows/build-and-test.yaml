@@ -13,6 +13,9 @@ jobs:
       image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
       options: --privileged
     steps:
+      - name: Install Flatpak
+        run: |
+          flatpak install --user org.flatpak.Builder
       - uses: actions/checkout@v6.0.2
       - name: Run Lint on Manifest
         run: |
@@ -27,11 +30,3 @@ jobs:
         run: |
           # Run linting on the built repo but do not fail the build if there are linting issues
           flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo || true
-      - name: Upload Flatpak Bundle
-        uses: actions/upload-artifact@v6
-        with:
-          name: flatpak-bundle
-          path: PuzzleMoreDays.flatpak
-          retention-days: 3
-          overwrite: true
-          if-no-files-found: error
