@@ -3,7 +3,7 @@
 A Libadwaita application to solve daily puzzles in various formats. It can tell you, if you are on the
 right track or, whether it is impossible to solve the puzzle with your current approach.
 
-![screenshot](https://til7701.de/assets/images/puzzlemoredays.png)
+![screenshot](data/screenshot-default.png)
 
 ## Build and Run
 

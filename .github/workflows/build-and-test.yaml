@@ -24,9 +24,7 @@ jobs:
           flatpak install flathub -y org.flatpak.Builder
       - name: Run Lint on Manifest
         run: |
-          # Run linting but do not fail the build if there are linting issues
-          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest de.til7701.PuzzleMoreDays.json || true
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest de.til7701.PuzzleMoreDays.json
       - name: Run Lint on Repo
         run: |
-          # Run linting on the built repo but do not fail the build if there are linting issues
-          flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo || true
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo

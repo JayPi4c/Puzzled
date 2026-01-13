@@ -87,6 +87,43 @@
     background-color: #666666;
 }
 
+/*TODO: Enable dark/light mode support for board cells with gtk 4.20*/
+/*@media (prefers-color-scheme: dark) {*/
+/*    .board-cell-0 {*/
+/*        background-color: #333333;*/
+/*    }*/
+
+/*    .board-cell-1 {*/
+/*        background-color: #444444;*/
+/*    }*/
+
+/*    .board-cell-2 {*/
+/*        background-color: #555555;*/
+/*    }*/
+
+/*    .board-cell-3 {*/
+/*        background-color: #666666;*/
+/*    }*/
+/*}*/
+
+/*@media (prefers-color-scheme: light) {*/
+/*    .board-cell-0 {*/
+/*        background-color: #F6F5F4;*/
+/*    }*/
+
+/*    .board-cell-1 {*/
+/*        background-color: #DEDDDA;*/
+/*    }*/
+
+/*    .board-cell-2 {*/
+/*        background-color: #C0BFBC;*/
+/*    }*/
+
+/*    .board-cell-3 {*/
+/*        background-color: #9A9996;*/
+/*    }*/
+/*}*/
+
 .target-selection {
     border-style: solid;
     border-width: 3px;
