@@ -4,63 +4,65 @@
 }
 
 .tile-cell-0 {
-    background-color: #1A5FB4;
+    background-color: var(--blue-5);
 }
 
 .tile-cell-1 {
-    background-color: #26A269;
+    background-color: var(--green-5);
 }
 
 .tile-cell-2 {
-    background-color: #E5A50A;
+    background-color: var(--yellow-5);
 }
 
 .tile-cell-3 {
-    background-color: #C64600;
+    background-color: var(--orange-5);
 }
 
 .tile-cell-4 {
-    background-color: #A51D2D;
+    background-color: var(--red-5);
 }
 
 .tile-cell-5 {
-    background-color: #613583;
+    background-color: var(--purple-5);
 }
 
 .tile-cell-6 {
-    background-color: #63452C;
+    background-color: var(--brown-5);
 }
 
 .tile-cell-7 {
-    background-color: #62A0EA;
+    background-color: var(--blue-2);
 }
 
 .tile-cell-8 {
-    background-color: #57E389;
+    background-color: var(--green-2);
 }
 
 .tile-cell-9 {
-    background-color: #C061CB;
+    background-color: var(--purple-2);
 }
 
 .tile-cell-10 {
-    background-color: #F8E45C;
+    background-color: var(--yellow-2);
 }
 
 .tile-cell-11 {
-    background-color: #B5835A;
+    background-color: var(--brown-2);
 }
 
 .overlap-highlight {
-    border-style: dotted;
+    border-style: solid;
     border-width: 3px;
-    border-color: #E01B24;
+    border-color: var(--error-bg-color);
+    opacity: var(--dim-opacity);
 }
 
 .out-of-bounds-highlight {
-    border-style: dotted;
+    border-style: solid;
     border-width: 3px;
-    border-color: #FF7800;
+    border-color: var(--warning-bg-color);
+    opacity: var(--dim-opacity);
 }
 
 .board-grid {
@@ -71,61 +73,44 @@
     border-radius: 0;
 }
 
-.board-cell-0 {
-    background-color: #333333;
+@media (prefers-color-scheme: dark) {
+    .board-cell-0 {
+        background-color: #333333;
+    }
+
+    .board-cell-1 {
+        background-color: #444444;
+    }
+
+    .board-cell-2 {
+        background-color: #555555;
+    }
+
+    .board-cell-3 {
+        background-color: #666666;
+    }
 }
 
-.board-cell-1 {
-    background-color: #444444;
+@media (prefers-color-scheme: light) {
+    .board-cell-0 {
+        background-color: var(--light-2);
+    }
+
+    .board-cell-1 {
+        background-color: var(--light-3);
+    }
+
+    .board-cell-2 {
+        background-color: var(--light-4);
+    }
+
+    .board-cell-3 {
+        background-color: var(--light-5);
+    }
 }
-
-.board-cell-2 {
-    background-color: #555555;
-}
-
-.board-cell-3 {
-    background-color: #666666;
-}
-
-/*TODO: Enable dark/light mode support for board cells with gtk 4.20*/
-/*@media (prefers-color-scheme: dark) {*/
-/*    .board-cell-0 {*/
-/*        background-color: #333333;*/
-/*    }*/
-
-/*    .board-cell-1 {*/
-/*        background-color: #444444;*/
-/*    }*/
-
-/*    .board-cell-2 {*/
-/*        background-color: #555555;*/
-/*    }*/
-
-/*    .board-cell-3 {*/
-/*        background-color: #666666;*/
-/*    }*/
-/*}*/
-
-/*@media (prefers-color-scheme: light) {*/
-/*    .board-cell-0 {*/
-/*        background-color: #F6F5F4;*/
-/*    }*/
-
-/*    .board-cell-1 {*/
-/*        background-color: #DEDDDA;*/
-/*    }*/
-
-/*    .board-cell-2 {*/
-/*        background-color: #C0BFBC;*/
-/*    }*/
-
-/*    .board-cell-3 {*/
-/*        background-color: #9A9996;*/
-/*    }*/
-/*}*/
 
 .target-selection {
     border-style: solid;
     border-width: 3px;
-    border-color: #2EC27E;
+    border-color: var(--accent-color);
 }

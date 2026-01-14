@@ -7,6 +7,7 @@ use crate::{puzzle, solver};
 use adw::glib;
 use adw::prelude::{ActionRowExt, AdwDialogExt, AlertDialogExt};
 use gtk::prelude::{ButtonExt, WidgetExt};
+use gtk::Settings;
 use humantime::format_duration;
 use log::debug;
 use std::cell::RefCell;

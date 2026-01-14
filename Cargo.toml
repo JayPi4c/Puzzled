@@ -9,8 +9,8 @@ edition = "2024"
 [workspace.dependencies]
 puzzle_solver = { path = "./puzzle_solver" }
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
-gtk = { version = "0.9.7", package = "gtk4", features = ["gnome_47"] }
-adw = { version = "0.7.2", package = "libadwaita", features = ["v1_7"] }
+gtk = { version = "0.10.3", package = "gtk4", features = ["gnome_49"] }
+adw = { version = "0.8.1", package = "libadwaita", features = ["v1_8"] }
 ndarray = "0.17.1"
 once_cell = "1.21.3"
 log = "0.4.29"

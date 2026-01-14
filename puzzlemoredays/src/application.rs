@@ -23,7 +23,11 @@ use adw::gdk::Display;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use gettextrs::gettext;
-use gtk::{gio, glib, CssProvider, STYLE_PROVIDER_PRIORITY_APPLICATION};
+use gtk::{
+    gio, glib, CssProvider, InterfaceColorScheme, Settings, STYLE_PROVIDER_PRIORITY_APPLICATION,
+};
+use log::debug;
+use std::fmt::Debug;
 
 mod imp {
     use super::*;
@@ -156,6 +160,36 @@ impl PuzzlemoredaysApplication {
         } else {
             eprintln!("No default adw::Display available to add CSS provider");
         }
+
+        debug!(
+            "Initial GTK application prefer dark theme is {:?}",
+            provider.prefers_color_scheme()
+        );
+        // This has to be manually updated when the system theme changes, since the CSSProvider
+        // somehow does not do that itself.
+        // Remove if this is fixed.
+        let settings = Settings::default().unwrap();
+        settings.connect_gtk_application_prefer_dark_theme_notify({
+            let provider = provider.clone();
+            move |s| {
+                let theme = s.is_gtk_application_prefer_dark_theme();
+                debug!("GTK application prefer dark theme changed to {:?}", theme);
+                if theme {
+                    provider.set_prefers_color_scheme(InterfaceColorScheme::Dark);
+                } else {
+                    provider.set_prefers_color_scheme(InterfaceColorScheme::Light);
+                }
+            }
+        });
+        if settings.is_gtk_application_prefer_dark_theme() {
+            provider.set_prefers_color_scheme(InterfaceColorScheme::Dark);
+        } else {
+            provider.set_prefers_color_scheme(InterfaceColorScheme::Light);
+        }
+        debug!(
+            "GTK application prefer dark theme is {:?}",
+            provider.prefers_color_scheme()
+        );
     }
 
     fn setup(&self, window: &PuzzlemoredaysWindow) {

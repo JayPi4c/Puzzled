@@ -286,7 +286,6 @@ impl PuzzleAreaPresenter {
     }
 
     fn highlight(&self, mode: HighlightMode, widget: &Widget) {
-        widget.set_opacity(0.5);
         widget.add_css_class(match mode {
             Overlapping => OVERLAP_HIGHLIGHT_CSS_CLASS,
             OutOfBounds => OUT_OF_BOUNDS_HIGHLIGHT_CSS_CLASS,
@@ -294,7 +293,6 @@ impl PuzzleAreaPresenter {
     }
 
     fn clear_highlight(&self, widget: &Widget) {
-        widget.set_opacity(1.0);
         widget.remove_css_class(OVERLAP_HIGHLIGHT_CSS_CLASS);
         widget.remove_css_class(OUT_OF_BOUNDS_HIGHLIGHT_CSS_CLASS);
     }
