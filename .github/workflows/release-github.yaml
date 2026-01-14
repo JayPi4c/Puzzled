@@ -1,0 +1,25 @@
+name: Release on GitHub
+
+on:
+  workflow_call:
+
+jobs:
+  release:
+    name: Download and Release Artifacts on GitHub
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v7
+        name: Download Artifacts
+
+      - name: List artifacts
+        run: ls -al
+
+      - uses: ncipollo/release-action@v1.20.0
+        name: Create Release and Upload Artifacts
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ inputs.tag }}
+          commit: ${{ github.sha }}
+          draft: true
+          name: ${{ inputs.tag }}"
+          artifacts: "*.flatpak"
