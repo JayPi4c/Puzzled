@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 use crate::config::VERSION;
+use crate::global::settings::{Preferences, SolverEnabled};
 use crate::global::state::get_state_mut;
 use crate::presenter::collection_selection::CollectionSelectionPresenter;
 use crate::presenter::navigation::NavigationPresenter;
@@ -118,7 +119,10 @@ impl PuzzledApplication {
         let how_to_play_action = gio::ActionEntry::builder("how_to_play")
             .activate(move |app: &Self, _, _| app.show_how_to_play())
             .build();
-        self.add_action_entries([quit_action, about_action, how_to_play_action]);
+        let preferences = gio::ActionEntry::builder("preferences")
+            .activate(move |app: &Self, _, _| app.show_preferences())
+            .build();
+        self.add_action_entries([quit_action, about_action, how_to_play_action, preferences]);
     }
 
     fn show_about(&self) {
@@ -135,6 +139,25 @@ impl PuzzledApplication {
             .build();
 
         about.present(Some(&window));
+    }
+
+    fn show_preferences(&self) {
+        const RESOURCE_PATH: &str = "/de/til7701/Puzzled/preferences-dialog.ui";
+        let builder = gtk::Builder::from_resource(RESOURCE_PATH);
+        let dialog: adw::PreferencesDialog = builder
+            .object("preferences_dialog")
+            .expect("Missing `preferences_dialog` in resource");
+
+        let preferences = Preferences::default();
+
+        let enable_solver = builder
+            .object::<adw::SwitchRow>("enable_solver")
+            .expect("Missing `enable_solver` in resource");
+        preferences.bind(SolverEnabled, &enable_solver, "active");
+
+        if let Some(window) = self.active_window() {
+            dialog.present(Some(&window));
+        }
     }
 
     fn show_how_to_play(&self) {

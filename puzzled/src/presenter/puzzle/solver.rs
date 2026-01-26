@@ -1,5 +1,7 @@
 use crate::application::PuzzledApplication;
-use crate::global::state::{get_state, get_state_mut, SolverState};
+use crate::global::settings::Preferences;
+use crate::global::settings::SolverEnabled;
+use crate::global::state::{get_state, get_state_mut, PuzzleTypeExtension, SolverState};
 use crate::presenter::puzzle_area::puzzle_state::PuzzleState;
 use crate::solver;
 use crate::solver::interrupt_solver_call;
@@ -17,11 +19,13 @@ use tokio_util::sync::CancellationToken;
 pub struct SolverStatePresenter {
     window: PuzzledWindow,
     solver_status_button: Button,
+    preferences: Preferences,
 }
 
 impl SolverStatePresenter {
     pub fn new(window: &PuzzledWindow) -> Self {
         SolverStatePresenter {
+            preferences: Preferences::default(),
             window: window.clone(),
             solver_status_button: window.puzzle_area_nav_page().solver_state().clone(),
         }
@@ -50,7 +54,8 @@ impl SolverStatePresenter {
             .object::<adw::SwitchRow>("enable_solver")
             .expect("Missing `enable_solver` in resource");
         let state = get_state();
-        enable_solver.set_active(state.preferences_state.solver_enabled);
+        self.preferences
+            .bind(SolverEnabled, &enable_solver, "active");
 
         if let SolverState::Done {
             solvable: _,
@@ -68,13 +73,10 @@ impl SolverStatePresenter {
         dialog.connect_closed({
             let self_clone = self.clone();
             move |_| {
-                let mut state = get_state_mut();
                 let solver_enabled = enable_solver.is_active();
-                state.preferences_state.solver_enabled = enable_solver.is_active();
                 if solver_enabled {
-                    drop(state);
                 } else {
-                    self_clone.display_solver_state(&SolverState::Disabled {});
+                    self_clone.display_solver_state(&SolverState::Initial {});
                 }
             }
         });
@@ -82,11 +84,26 @@ impl SolverStatePresenter {
         dialog.present(Some(&self.window));
     }
 
-    pub fn calculate_solvability_if_enabled(&self, puzzle_state: &mut PuzzleState) {
+    pub fn update(&self, puzzle_state: &mut PuzzleState) {
         let state = get_state();
-        if state.preferences_state.solver_enabled {
-            drop(state);
+        let calculate_solvability = match &state.puzzle_type_extension {
+            None => true,
+            Some(PuzzleTypeExtension::Simple) => true,
+            Some(PuzzleTypeExtension::Area { target, .. }) => target.is_some(),
+        };
+        drop(state);
+        if calculate_solvability {
+            self.calculate_solvability_if_enabled(puzzle_state);
+        } else {
+            self.display_solver_state(&SolverState::Initial {});
+        }
+    }
+
+    pub fn calculate_solvability_if_enabled(&self, puzzle_state: &mut PuzzleState) {
+        if self.preferences.get(SolverEnabled) {
             self.calculate_solvability(puzzle_state);
+        } else {
+            self.display_solver_state(&SolverState::Initial {});
         }
     }
 
@@ -142,18 +159,6 @@ impl SolverStatePresenter {
                 self.solver_status_button
                     .set_icon_name("circle-outline-thick-symbolic");
             }
-            SolverState::NotAvailable => {
-                self.solver_status_button
-                    .set_tooltip_text(Some("Solver: Not Available without Target Day"));
-                self.solver_status_button
-                    .set_icon_name("stop-sign-large-outline-symbolic");
-            }
-            SolverState::Disabled => {
-                self.solver_status_button
-                    .set_tooltip_text(Some("Solver: Disabled"));
-                self.solver_status_button
-                    .set_icon_name("stop-sign-large-outline-symbolic");
-            }
             SolverState::Running { .. } => {
                 self.solver_status_button
                     .set_tooltip_text(Some("Solver: Running..."));
@@ -163,12 +168,12 @@ impl SolverStatePresenter {
             SolverState::Done { solvable, .. } => {
                 if *solvable {
                     self.solver_status_button
-                        .set_tooltip_text(Some("Solver: Solvable for current Target Day!"));
+                        .set_tooltip_text(Some("Solver: Solvable for current Target!"));
                     self.solver_status_button
                         .set_icon_name("check-round-outline2-symbolic");
                 } else {
                     self.solver_status_button
-                        .set_tooltip_text(Some("Solver: Unsolvable for current Target Day!"));
+                        .set_tooltip_text(Some("Solver: Unsolvable for current Target!"));
                     self.solver_status_button
                         .set_icon_name("cross-large-circle-outline-symbolic");
                 }
