@@ -8,6 +8,7 @@ pub use config::area::AreaValueFormatter;
 pub use config::board::BoardConfig;
 pub use config::collection::PuzzleConfigCollection;
 pub use config::difficulty::PuzzleDifficultyConfig;
+pub use config::progression::ProgressionConfig;
 pub use config::puzzle::PuzzleConfig;
 pub use config::target::{Target, TargetIndex, TargetTemplate};
 pub use config::tile::TileConfig;

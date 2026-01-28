@@ -1,4 +1,5 @@
 use crate::config::difficulty::PuzzleDifficultyConfig;
+use crate::config::progression::ProgressionConfig;
 use crate::config::{board, tile};
 use crate::{
     validation, AreaConfig, AreaValueFormatter, BoardConfig, PuzzleConfig, PuzzleConfigCollection,
@@ -19,14 +20,26 @@ struct PuzzleCollection {
     version: Option<String>,
     #[serde(default = "default_true")]
     allow_board_rotation: bool,
+    #[serde(default)]
+    progression: Progression,
     /// Custom tiles to override or extend predefined tiles.
     custom_tiles: Option<HashMap<String, Tile>>,
     custom_boards: Option<HashMap<String, Board>>,
     puzzles: Vec<Puzzle>,
 }
+
 fn default_true() -> bool {
     true
 }
+
+#[derive(Deserialize, Default)]
+#[serde(tag = "type")]
+enum Progression {
+    #[default]
+    Any,
+    Sequential,
+}
+
 #[derive(Deserialize)]
 struct Puzzle {
     name: String,
@@ -172,6 +185,7 @@ fn convert(puzzle_collection: PuzzleCollection) -> Result<PuzzleConfigCollection
         puzzle_collection.author,
         validation::validate_collection_id(puzzle_collection.id)?,
         puzzle_collection.version,
+        convert_progression(&puzzle_collection.progression),
         puzzle_configs,
     ))
 }
@@ -228,6 +242,13 @@ fn convert_difficulty(difficulty: &Option<PuzzleDifficulty>) -> Option<PuzzleDif
         Some(PuzzleDifficulty::Hard) => Some(PuzzleDifficultyConfig::Hard),
         Some(PuzzleDifficulty::Expert) => Some(PuzzleDifficultyConfig::Expert),
         None => None,
+    }
+}
+
+fn convert_progression(progression: &Progression) -> ProgressionConfig {
+    match progression {
+        Progression::Any => ProgressionConfig::Any,
+        Progression::Sequential => ProgressionConfig::Sequential,
     }
 }
 
